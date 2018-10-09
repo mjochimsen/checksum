@@ -1,3 +1,8 @@
+use std::env::args;
+
+mod config;
+
 fn main() {
-    println!("Hello, world!");
+    let config = config::Config::new(args());
+    println!("Hello, config: {:?}", config);
 }
