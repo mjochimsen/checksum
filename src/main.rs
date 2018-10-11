@@ -1,4 +1,5 @@
 extern crate crc;
+extern crate crypto;
 
 use std::env::args;
 use std::fs;
@@ -7,6 +8,8 @@ use std::io::Read;
 use std::path;
 use std::process::exit;
 use crc::{crc32, Hasher32};
+use crypto::md5::Md5;
+use crypto::digest::Digest;
 
 mod config;
 
@@ -39,7 +42,7 @@ fn run(config: Config) -> Result<(), String> {
 
         let size = metadata.len();
 
-        println!("SIZE({}): {}", filename, size);
+        println!("SIZE ({}): {}", filename, size);
 
         let xor = match xor(&path) {
             Ok(xor) => xor,
@@ -49,7 +52,7 @@ fn run(config: Config) -> Result<(), String> {
             },
         };
 
-        println!("XOR({}): {:02x}", filename, xor);
+        println!("XOR ({}): {:02x}", filename, xor);
 
         let crc32 = match crc32(&path) {
             Ok(crc32) => crc32,
@@ -59,7 +62,20 @@ fn run(config: Config) -> Result<(), String> {
             },
         };
 
-        println!("CRC32({}): {:08x}", filename, crc32);
+        println!("CRC32 ({}): {:08x}", filename, crc32);
+
+        let md5 = match md5(&path) {
+            Ok(md5) => md5,
+            Err(_error) => {
+                let error = format!("unable to read {}", filename);
+                return Err(error);
+            },
+        };
+
+        let md5 = md5.iter().fold("".to_string(), |acc, byte| {
+            format!("{}{:02x}", acc, byte)
+        });
+        println!("MD5 ({}): {}", filename, md5);
     }
 
     Ok(())
@@ -99,6 +115,25 @@ fn crc32(path: &path::Path) -> Result<u32, io::Error> {
     }
 
     Ok(digest.sum32())
+}
+
+fn md5(path: &path::Path) -> Result<[u8; 0x10], io::Error> {
+    let mut input = fs::File::open(path)?;
+    let mut buffer = [0u8; 0x4000];
+    let mut digest = Md5::new();
+
+    loop {
+        let count = input.read(&mut buffer)?;
+        if count > 0 {
+            digest.input(&buffer);
+        } else {
+            break;
+        }
+    }
+
+    let mut result = [0u8; 0x10];
+    digest.result(&mut result);
+    Ok(result)
 }
 
 #[cfg(test)]
@@ -145,6 +180,30 @@ mod tests {
         let random = Path::new("test/random.data");
         match crc32(random) {
             Ok(value) => assert_eq!(value, 0xaa442759),
+            Err(error) => assert!(false, "unexpected error: {:?}", error),
+        };
+    }
+
+    #[test]
+    fn md5_zero() {
+        let zero = Path::new("test/zero.data");
+        match md5(zero) {
+            Ok(value) => assert_eq!(value, [
+                0xfc, 0xd6, 0xbc, 0xb5, 0x6c, 0x16, 0x89, 0xfc,
+                0xef, 0x28, 0xb5, 0x7c, 0x22, 0x47, 0x5b, 0xad
+                ]),
+            Err(error) => assert!(false, "unexpected error: {:?}", error),
+        };
+    }
+
+    #[test]
+    fn md5_random() {
+        let random = Path::new("test/random.data");
+        match md5(random) {
+            Ok(value) => assert_eq!(value, [
+                0x0a, 0x45, 0x1b, 0x7f, 0x7c, 0x09, 0x01, 0x32,
+                0x56, 0xbf, 0x70, 0xa5, 0xff, 0x69, 0x43, 0x1f
+                ]),
             Err(error) => assert!(false, "unexpected error: {:?}", error),
         };
     }

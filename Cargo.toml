@@ -5,3 +5,4 @@ authors = ["Michael Jochimsen <mlj@troglodytics.org>"]
 
 [dependencies]
 crc = "^1.0.0"
+rust-crypto = "^0.2"
