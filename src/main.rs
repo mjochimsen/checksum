@@ -79,7 +79,7 @@ fn crc32(path: &path::Path) -> Result<u32, io::Error> {
     loop {
         let count = input.read(&mut buffer)?;
         if count > 0 {
-            digest.write(&buffer);
+            digest.write(&buffer[0..count]);
         } else {
             break;
         }
@@ -96,7 +96,7 @@ fn md5(path: &path::Path) -> Result<[u8; 0x10], io::Error> {
     loop {
         let count = input.read(&mut buffer)?;
         if count > 0 {
-            digest.input(&buffer);
+            digest.input(&buffer[0..count]);
         } else {
             break;
         }
@@ -123,7 +123,7 @@ mod tests {
     fn crc32_zero() {
         let zero = Path::new("test/zero.data");
         match crc32(zero) {
-            Ok(value) => assert_eq!(value, 0xd7978eeb),
+            Ok(value) => assert_eq!(value, 0x5dc1d8ba),
             Err(error) => assert!(false, "unexpected error: {:?}", error),
         };
     }
@@ -132,7 +132,7 @@ mod tests {
     fn crc32_random() {
         let random = Path::new("test/random.data");
         match crc32(random) {
-            Ok(value) => assert_eq!(value, 0xaa442759),
+            Ok(value) => assert_eq!(value, 0xff70a8ee),
             Err(error) => assert!(false, "unexpected error: {:?}", error),
         };
     }
@@ -142,8 +142,8 @@ mod tests {
         let zero = Path::new("test/zero.data");
         match md5(zero) {
             Ok(value) => assert_eq!(value, [
-                0xfc, 0xd6, 0xbc, 0xb5, 0x6c, 0x16, 0x89, 0xfc,
-                0xef, 0x28, 0xb5, 0x7c, 0x22, 0x47, 0x5b, 0xad
+                0x41, 0xa2, 0x2d, 0x1e, 0xe7, 0x89, 0xde, 0xcb,
+                0xfb, 0xd4, 0x92, 0x4e, 0xc2, 0x1e, 0x53, 0xc9
                 ]),
             Err(error) => assert!(false, "unexpected error: {:?}", error),
         };
@@ -154,8 +154,8 @@ mod tests {
         let random = Path::new("test/random.data");
         match md5(random) {
             Ok(value) => assert_eq!(value, [
-                0x0a, 0x45, 0x1b, 0x7f, 0x7c, 0x09, 0x01, 0x32,
-                0x56, 0xbf, 0x70, 0xa5, 0xff, 0x69, 0x43, 0x1f
+                0xff, 0x8a, 0xe3, 0xcf, 0x94, 0x4c, 0xdd, 0xde,
+                0xa7, 0x19, 0x1c, 0x90, 0x6a, 0xfe, 0x0c, 0x81
                 ]),
             Err(error) => assert!(false, "unexpected error: {:?}", error),
         };
