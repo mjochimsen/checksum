@@ -44,16 +44,6 @@ fn run(config: Config) -> Result<(), String> {
 
         println!("SIZE ({}): {}", filename, size);
 
-        let xor = match xor(&path) {
-            Ok(xor) => xor,
-            Err(_error) => {
-                let error = format!("unable to read {}", filename);
-                return Err(error);
-            },
-        };
-
-        println!("XOR ({}): {:02x}", filename, xor);
-
         let crc32 = match crc32(&path) {
             Ok(crc32) => crc32,
             Err(_error) => {
@@ -79,25 +69,6 @@ fn run(config: Config) -> Result<(), String> {
     }
 
     Ok(())
-}
-
-fn xor(path: &path::Path) -> Result<u8, io::Error> {
-    let mut input = fs::File::open(path)?;
-    let mut buffer = [0u8; 0x4000];
-    let mut xor: u8 = 0;
-
-    loop {
-        let count = input.read(&mut buffer)?;
-        if count > 0 {
-            xor = buffer.iter().fold(xor, |acc, byte| {
-                acc ^ byte
-            });
-        } else {
-            break;
-        }
-    }
-
-    Ok(xor)
 }
 
 fn crc32(path: &path::Path) -> Result<u32, io::Error> {
@@ -146,24 +117,6 @@ mod tests {
     fn fake_run() {
         let config = Config::new(vec!("test/zero.data", "test/random.data").iter());
         assert_eq!(run(config), Ok(()));
-    }
-
-    #[test]
-    fn xor_zero() {
-        let zero = Path::new("test/zero.data");
-        match xor(zero) {
-            Ok(value) => assert_eq!(value, 0),
-            Err(error) => assert!(false, "unexpected error: {:?}", error),
-        };
-    }
-
-    #[test]
-    fn xor_random() {
-        let random = Path::new("test/random.data");
-        match xor(random) {
-            Ok(value) => assert_eq!(value, 0x0f),
-            Err(error) => assert!(false, "unexpected error: {:?}", error),
-        };
     }
 
     #[test]
