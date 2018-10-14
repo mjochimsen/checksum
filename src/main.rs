@@ -7,11 +7,11 @@ use std::io;
 use std::io::Read;
 use std::path;
 use std::process::exit;
+use std::sync::mpsc::channel;
 use crc::{crc32, Hasher32};
-use crypto::md5::Md5;
-use crypto::digest::Digest;
 
 mod config;
+mod digest;
 
 use config::Config;
 
@@ -91,20 +91,29 @@ fn crc32(path: &path::Path) -> Result<u32, io::Error> {
 fn md5(path: &path::Path) -> Result<[u8; 0x10], io::Error> {
     let mut input = fs::File::open(path)?;
     let mut buffer = [0u8; 0x4000];
-    let mut digest = Md5::new();
+    let (tx, rx) = channel();
+    let (tx_digest, rx_digest) = channel();
+
+    std::thread::spawn(move || {
+        let digest = digest::md5(rx);
+        tx_digest.send(digest).unwrap();
+    });
 
     loop {
         let count = input.read(&mut buffer)?;
-        if count > 0 {
-            digest.input(&buffer[0..count]);
-        } else {
+        let block = digest::Block { size: count, data: Box::new(buffer) };
+        tx.send(block).unwrap();
+        if count == 0 {
             break;
         }
     }
 
-    let mut result = [0u8; 0x10];
-    digest.result(&mut result);
-    Ok(result)
+    let digest = rx_digest.recv();
+
+    match digest {
+        Ok(digest::Digest::MD5(digest)) => Ok(digest),
+        _ => Err(io::Error::new(io::ErrorKind::InvalidData, "error receiving checksum data")),
+    }
 }
 
 #[cfg(test)]
