@@ -7,7 +7,6 @@ use std::io;
 use std::io::Read;
 use std::path;
 use std::process::exit;
-use std::sync::mpsc::channel;
 use crc::{crc32, Hasher32};
 
 mod config;
@@ -91,13 +90,8 @@ fn crc32(path: &path::Path) -> Result<u32, io::Error> {
 fn md5(path: &path::Path) -> Result<[u8; 0x10], io::Error> {
     let mut input = fs::File::open(path)?;
     let mut buffer = [0u8; 0x4000];
-    let (tx, rx) = channel();
-    let (tx_digest, rx_digest) = channel();
 
-    std::thread::spawn(move || {
-        let digest = digest::md5(rx);
-        tx_digest.send(digest).unwrap();
-    });
+    let (tx, rx) = digest::background_md5();
 
     loop {
         let count = input.read(&mut buffer)?;
@@ -108,7 +102,7 @@ fn md5(path: &path::Path) -> Result<[u8; 0x10], io::Error> {
         }
     }
 
-    let digest = rx_digest.recv();
+    let digest = rx.recv();
 
     match digest {
         Ok(digest::Digest::MD5(digest)) => Ok(digest),

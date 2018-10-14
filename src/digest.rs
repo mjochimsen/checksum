@@ -1,6 +1,7 @@
 extern crate crypto;
 
-use std::sync::mpsc;
+use std::thread::spawn;
+use std::sync::mpsc::{channel, Receiver, Sender};
 
 pub struct Block {
     pub size: usize,
@@ -15,7 +16,19 @@ pub enum Digest {
     // RMD160([u8; 20]),
 }
 
-pub fn md5(rx: mpsc::Receiver<Block>) -> Digest {
+pub fn background_md5() -> (Sender<Block>, Receiver<Digest>) {
+    let (tx_data, rx_data) = channel();
+    let (tx_digest, rx_digest) = channel();
+
+    spawn(move || {
+        let digest = md5(rx_data);
+        tx_digest.send(digest).unwrap();
+    });
+
+    (tx_data, rx_digest)
+}
+
+fn md5(rx: Receiver<Block>) -> Digest {
     let mut digest = crypto::md5::Md5::new();
     let mut result = [0u8; 16];
 
@@ -40,24 +53,17 @@ pub fn md5(rx: mpsc::Receiver<Block>) -> Digest {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::thread::spawn;
 
     const ZERO_DATA: [u8; 0x4000] = [0; 0x4000];
 
     #[test]
-    fn md5_empty() {
-        let (tx, rx) = mpsc::channel::<Block>();
-        let (tx_digest, rx_digest) = mpsc::channel::<Digest>();
-
-        spawn(move || {
-            let digest = md5(rx);
-            tx_digest.send(digest).unwrap();
-        });
+    fn background_md5_empty() {
+        let (tx, rx) = background_md5();
 
         let block = Block { size: 0, data: Box::new(ZERO_DATA) };
         tx.send(block).unwrap();
 
-        let digest = rx_digest.recv();
+        let digest = rx.recv();
         match digest {
             Ok(Digest::MD5(value)) =>
                 assert_eq!(value, [
@@ -69,14 +75,8 @@ mod tests {
     }
 
     #[test]
-    fn md5_multiple_sends() {
-        let (tx, rx) = mpsc::channel::<Block>();
-        let (tx_digest, rx_digest) = mpsc::channel::<Digest>();
-
-        spawn(move || {
-            let digest = md5(rx);
-            tx_digest.send(digest).unwrap();
-        });
+    fn background_md5_multiple_sends() {
+        let (tx, rx) = background_md5();
 
         let block = Block { size: 0x4000, data: Box::new(ZERO_DATA) };
         tx.send(block).unwrap();
@@ -85,7 +85,7 @@ mod tests {
         let block = Block { size: 0, data: Box::new(ZERO_DATA) };
         tx.send(block).unwrap();
 
-        let digest = rx_digest.recv();
+        let digest = rx.recv();
         match digest {
             Ok(Digest::MD5(value)) => assert_eq!(value, [
                 0x96, 0xf6, 0x4e, 0x17, 0x9f, 0x77, 0x7e, 0x6e,
