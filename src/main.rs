@@ -61,9 +61,6 @@ fn run(config: Config) -> Result<(), String> {
             },
         };
 
-        let md5 = md5.iter().fold("".to_string(), |acc, byte| {
-            format!("{}{:02x}", acc, byte)
-        });
         println!("MD5 ({}): {}", filename, md5);
     }
 
@@ -87,7 +84,7 @@ fn crc32(path: &path::Path) -> Result<u32, io::Error> {
     Ok(digest.sum32())
 }
 
-fn md5(path: &path::Path) -> Result<[u8; 0x10], io::Error> {
+fn md5(path: &path::Path) -> Result<digest::Digest, io::Error> {
     let mut input = fs::File::open(path)?;
     let mut buffer = [0u8; 0x4000];
 
@@ -105,7 +102,7 @@ fn md5(path: &path::Path) -> Result<[u8; 0x10], io::Error> {
     let digest = rx.recv();
 
     match digest {
-        Ok(digest::Digest::MD5(digest)) => Ok(digest),
+        Ok(digest) => Ok(digest),
         _ => Err(io::Error::new(io::ErrorKind::InvalidData, "error receiving checksum data")),
     }
 }
@@ -144,7 +141,7 @@ mod tests {
     fn md5_zero() {
         let zero = Path::new("test/zero.data");
         match md5(zero) {
-            Ok(value) => assert_eq!(value, [
+            Ok(digest::Digest::MD5(value)) => assert_eq!(value, [
                 0x41, 0xa2, 0x2d, 0x1e, 0xe7, 0x89, 0xde, 0xcb,
                 0xfb, 0xd4, 0x92, 0x4e, 0xc2, 0x1e, 0x53, 0xc9
                 ]),
@@ -156,7 +153,7 @@ mod tests {
     fn md5_random() {
         let random = Path::new("test/random.data");
         match md5(random) {
-            Ok(value) => assert_eq!(value, [
+            Ok(digest::Digest::MD5(value)) => assert_eq!(value, [
                 0xff, 0x8a, 0xe3, 0xcf, 0x94, 0x4c, 0xdd, 0xde,
                 0xa7, 0x19, 0x1c, 0x90, 0x6a, 0xfe, 0x0c, 0x81
                 ]),
