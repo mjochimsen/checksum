@@ -92,8 +92,8 @@ fn md5(path: &path::Path) -> Result<digest::Digest, io::Error> {
 
     loop {
         let count = input.read(&mut buffer)?;
-        let block = digest::Block { size: count, data: Box::new(buffer) };
-        tx.send(block).unwrap();
+        let data = Box::from(&buffer[0..count]);
+        tx.send(data).unwrap();
         if count == 0 {
             break;
         }

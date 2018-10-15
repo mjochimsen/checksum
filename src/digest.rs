@@ -3,11 +3,6 @@ extern crate crypto;
 use std::thread::spawn;
 use std::sync::mpsc::{channel, Receiver, Sender};
 
-pub struct Block {
-    pub size: usize,
-    pub data: Box<[u8; 0x4000]>,
-}
-
 #[derive(Debug)]
 pub enum Digest {
     MD5([u8; 16]),
@@ -30,7 +25,7 @@ impl fmt::Display for Digest {
     }
 }
 
-pub fn background_md5() -> (Sender<Block>, Receiver<Digest>) {
+pub fn background_md5() -> (Sender<Box<[u8]>>, Receiver<Digest>) {
     let (tx_data, rx_data) = channel();
     let (tx_digest, rx_digest) = channel();
 
@@ -42,20 +37,21 @@ pub fn background_md5() -> (Sender<Block>, Receiver<Digest>) {
     (tx_data, rx_digest)
 }
 
-fn md5(rx: Receiver<Block>) -> Digest {
+fn md5(rx: Receiver<Box<[u8]>>) -> Digest {
     let mut digest = crypto::md5::Md5::new();
     let mut result = [0u8; 16];
 
     {
         use crypto::digest::Digest;
-        loop {
-            let block = rx.recv().unwrap();
 
-            if block.size == 0 {
+        loop {
+            let data = rx.recv().unwrap();
+
+            if data.len() == 0 {
                 break;
             }
 
-            digest.input(&block.data[0..block.size]);
+            digest.input(&*data);
         }
 
         digest.result(&mut result);
@@ -68,14 +64,11 @@ fn md5(rx: Receiver<Block>) -> Digest {
 mod tests {
     use super::*;
 
-    const ZERO_DATA: [u8; 0x4000] = [0; 0x4000];
-
     #[test]
     fn background_md5_empty() {
         let (tx, rx) = background_md5();
 
-        let block = Block { size: 0, data: Box::new(ZERO_DATA) };
-        tx.send(block).unwrap();
+        tx.send(Box::new([])).unwrap();
 
         let digest = rx.recv();
         match digest {
@@ -92,12 +85,12 @@ mod tests {
     fn background_md5_multiple_sends() {
         let (tx, rx) = background_md5();
 
-        let block = Block { size: 0x4000, data: Box::new(ZERO_DATA) };
-        tx.send(block).unwrap();
-        let block = Block { size: 0x0d, data: Box::new(ZERO_DATA) };
-        tx.send(block).unwrap();
-        let block = Block { size: 0, data: Box::new(ZERO_DATA) };
-        tx.send(block).unwrap();
+        let data = Box::from([0; 0x4000]);
+        tx.send(data).unwrap();
+        let data = Box::from([0; 0x0d]);
+        tx.send(data).unwrap();
+        let data = Box::new([]);
+        tx.send(data).unwrap();
 
         let digest = rx.recv();
         match digest {
