@@ -16,6 +16,20 @@ pub enum Digest {
     // RMD160([u8; 20]),
 }
 
+use std::fmt;
+
+impl fmt::Display for Digest {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let digest = match self {
+            Digest::MD5(digest) => digest.iter(),
+        };
+        let digest = digest.fold("".to_string(), |acc, byte| {
+            format!("{}{:02x}", acc, byte)
+        });
+        write!(f, "{}", digest)
+    }
+}
+
 pub fn background_md5() -> (Sender<Block>, Receiver<Digest>) {
     let (tx_data, rx_data) = channel();
     let (tx_digest, rx_digest) = channel();
@@ -93,5 +107,12 @@ mod tests {
                 ]),
             Err(error) => assert!(false, "unexpected error: {:?}", error),
         };
+    }
+
+    #[test]
+    fn md5_format() {
+        let md5 = Digest::MD5([0xd4, 0x1d, 0x8c, 0xd9, 0x8f, 0x00, 0xb2, 0x04,
+                               0xe9, 0x80, 0x09, 0x98, 0xec, 0xf8, 0x42, 0x7e]);
+        assert_eq!(format!("{}", md5), "d41d8cd98f00b204e9800998ecf8427e");
     }
 }
