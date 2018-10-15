@@ -107,6 +107,29 @@ fn md5(path: &path::Path) -> Result<digest::Digest, io::Error> {
     }
 }
 
+fn sha256(path: &path::Path) -> Result<digest::Digest, io::Error> {
+    let mut input = fs::File::open(path)?;
+    let mut buffer = [0u8; 0x4000];
+
+    let (tx, rx) = digest::background_sha256();
+
+    loop {
+        let count = input.read(&mut buffer)?;
+        let data = Box::from(&buffer[0..count]);
+        tx.send(data).unwrap();
+        if count == 0 {
+            break;
+        }
+    }
+
+    let digest = rx.recv();
+
+    match digest {
+        Ok(digest) => Ok(digest),
+        _ => Err(io::Error::new(io::ErrorKind::InvalidData, "error receiving checksum data")),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -141,10 +164,12 @@ mod tests {
     fn md5_zero() {
         let zero = Path::new("test/zero.data");
         match md5(zero) {
-            Ok(digest::Digest::MD5(value)) => assert_eq!(value, [
-                0x41, 0xa2, 0x2d, 0x1e, 0xe7, 0x89, 0xde, 0xcb,
-                0xfb, 0xd4, 0x92, 0x4e, 0xc2, 0x1e, 0x53, 0xc9
+            Ok(digest::Digest::MD5(value)) =>
+                assert_eq!(value, [
+                    0x41, 0xa2, 0x2d, 0x1e, 0xe7, 0x89, 0xde, 0xcb,
+                    0xfb, 0xd4, 0x92, 0x4e, 0xc2, 0x1e, 0x53, 0xc9
                 ]),
+            Ok(digest) => assert!(false, "unexpected digest: {:?}", digest),
             Err(error) => assert!(false, "unexpected error: {:?}", error),
         };
     }
@@ -153,10 +178,44 @@ mod tests {
     fn md5_random() {
         let random = Path::new("test/random.data");
         match md5(random) {
-            Ok(digest::Digest::MD5(value)) => assert_eq!(value, [
-                0xff, 0x8a, 0xe3, 0xcf, 0x94, 0x4c, 0xdd, 0xde,
-                0xa7, 0x19, 0x1c, 0x90, 0x6a, 0xfe, 0x0c, 0x81
+            Ok(digest::Digest::MD5(value)) =>
+                assert_eq!(value, [
+                    0xff, 0x8a, 0xe3, 0xcf, 0x94, 0x4c, 0xdd, 0xde,
+                    0xa7, 0x19, 0x1c, 0x90, 0x6a, 0xfe, 0x0c, 0x81
                 ]),
+            Ok(digest) => assert!(false, "unexpected digest: {:?}", digest),
+            Err(error) => assert!(false, "unexpected error: {:?}", error),
+        };
+    }
+
+    #[test]
+    fn sha256_zero() {
+        let zero = Path::new("test/zero.data");
+        match sha256(zero) {
+            Ok(digest::Digest::SHA256(value)) =>
+                assert_eq!(value, [
+                    0xb3, 0xae, 0x04, 0xa0, 0x71, 0x30, 0x26, 0xc8,
+                    0xcb, 0xf8, 0x8b, 0x6c, 0xbf, 0xf1, 0x73, 0xf6,
+                    0x8a, 0x27, 0xcd, 0x37, 0x64, 0x14, 0xc4, 0x66,
+                    0x45, 0xdd, 0x1a, 0x22, 0x93, 0x48, 0x6c, 0x99
+                ]),
+            Ok(digest) => assert!(false, "unexpected digest: {:?}", digest),
+            Err(error) => assert!(false, "unexpected error: {:?}", error),
+        };
+    }
+
+    #[test]
+    fn sha256_random() {
+        let random = Path::new("test/random.data");
+        match sha256(random) {
+            Ok(digest::Digest::SHA256(value)) =>
+                assert_eq!(value, [
+                    0x51, 0x52, 0xc2, 0xfe, 0xad, 0x7d, 0x46, 0xcd,
+                    0x79, 0x11, 0x5c, 0xd0, 0x93, 0x53, 0x46, 0x47,
+                    0xd8, 0x06, 0xd7, 0x4d, 0xa1, 0xaf, 0xda, 0x90,
+                    0xbd, 0xc0, 0x6d, 0x4e, 0x7e, 0x40, 0xc5, 0x2d
+                ]),
+            Ok(digest) => assert!(false, "unexpected digest: {:?}", digest),
             Err(error) => assert!(false, "unexpected error: {:?}", error),
         };
     }
