@@ -2,6 +2,8 @@ extern crate crypto;
 
 use std::thread::spawn;
 use std::sync::mpsc::{channel, Receiver, Sender};
+use crypto::digest::Digest as DigestTrait;
+
 
 #[derive(Debug)]
 pub enum Digest {
@@ -39,25 +41,11 @@ pub fn background_md5() -> (Sender<Box<[u8]>>, Receiver<Digest>) {
 }
 
 fn md5(rx: Receiver<Box<[u8]>>) -> Digest {
-    let mut digest = crypto::md5::Md5::new();
+    let md5 = crypto::md5::Md5::new();
+    let mut digest = digest_loop(md5, rx);
+
     let mut result = [0u8; 16];
-
-    {
-        use crypto::digest::Digest;
-
-        loop {
-            let data = rx.recv().unwrap();
-
-            if data.len() == 0 {
-                break;
-            }
-
-            digest.input(&*data);
-        }
-
-        digest.result(&mut result);
-    }
-
+    digest.result(&mut result);
     Digest::MD5(result)
 }
 
@@ -74,26 +62,25 @@ pub fn background_sha256() -> (Sender<Box<[u8]>>, Receiver<Digest>) {
 }
 
 fn sha256(rx: Receiver<Box<[u8]>>) -> Digest {
-    let mut digest = crypto::sha2::Sha256::new();
+    let sha256 = crypto::sha2::Sha256::new();
+    let mut digest = digest_loop(sha256, rx);
+
     let mut result = [0u8; 32];
+    digest.result(&mut result);
+    Digest::SHA256(result)
+}
 
-    {
-        use crypto::digest::Digest;
+fn digest_loop(mut digest: impl DigestTrait, rx: Receiver<Box<[u8]>>) -> impl DigestTrait {
+    loop {
+        let data = rx.recv().unwrap();
 
-        loop {
-            let data = rx.recv().unwrap();
-
-            if data.len() == 0 {
-                break;
-            }
-
-            digest.input(&*data);
+        if data.len() == 0 {
+            break;
         }
 
-        digest.result(&mut result);
+        digest.input(&*data);
     }
-
-    Digest::SHA256(result)
+    digest
 }
 
 #[cfg(test)]
