@@ -62,6 +62,16 @@ fn run(config: Config) -> Result<(), String> {
         };
 
         println!("MD5 ({}): {}", filename, md5);
+
+        let sha256 = match sha256(&path) {
+            Ok(sha256) => sha256,
+            Err(_error) => {
+                let error = format!("unable to read {}", filename);
+                return Err(error);
+            },
+        };
+
+        println!("SHA256 ({}): {}", filename, sha256);
     }
 
     Ok(())
