@@ -5,7 +5,7 @@ extern crate crypto;
 use digest::Digest;
 
 pub struct MD5 {
-    tx_input: mpsc::SyncSender<Box<[u8]>>,
+    tx_input: mpsc::SyncSender<Message>,
     rx_result: mpsc::Receiver<[u8; 16]>,
 }
 
@@ -24,14 +24,14 @@ impl MD5 {
     }
 
     pub fn append(&self, data: Box<[u8]>) {
-        self.tx_input.send(data)
+        self.tx_input.send(Message::Append(data))
             .expect("unexpected error appending to digest");
     }
 
     pub fn result(&self) -> Digest {
         use std::time::Duration;
 
-        self.tx_input.send(Box::new([]))
+        self.tx_input.send(Message::Finish)
             .expect("unexpected error finishing digest");
 
         let timeout = Duration::new(5, 0);
@@ -42,20 +42,25 @@ impl MD5 {
     }
 }
 
-fn background_md5(rx_input: mpsc::Receiver<Box<[u8]>>,
+enum Message {
+    Append(Box<[u8]>),
+    Finish,
+}
+
+fn background_md5(rx_input: mpsc::Receiver<Message>,
                   tx_result: mpsc::Sender<[u8; 16]>) {
     use crypto::digest::Digest as DigestTrait;
 
     let mut md5 = crypto::md5::Md5::new();
 
     loop {
-        let data = rx_input.recv().unwrap();
+        let msg = rx_input.recv();
 
-        if data.len() == 0 {
-            break;
+        match msg {
+            Ok(Message::Append(data)) => md5.input(&*data),
+            Ok(Message::Finish) => break,
+            Err(_) => panic!(),
         }
-
-        md5.input(&*data);
     }
 
     let mut result = [0u8; 16];
