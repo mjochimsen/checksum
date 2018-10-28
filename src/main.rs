@@ -11,6 +11,7 @@ use crc::{crc32, Hasher32};
 
 mod config;
 mod digest;
+mod md5;
 
 use config::Config;
 
