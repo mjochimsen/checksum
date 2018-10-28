@@ -1,4 +1,5 @@
 use std::sync::mpsc;
+use std::sync::Arc;
 
 use digest::Digest;
 
@@ -21,7 +22,7 @@ impl MD5 {
         MD5 { tx_input, rx_result }
     }
 
-    pub fn append(&self, data: Box<[u8]>) {
+    pub fn append(&self, data: Arc<[u8]>) {
         self.tx_input.send(Message::Append(data))
             .expect("unexpected error appending to digest");
     }
@@ -41,7 +42,7 @@ impl MD5 {
 }
 
 enum Message {
-    Append(Box<[u8]>),
+    Append(Arc<[u8]>),
     Finish,
 }
 
@@ -98,9 +99,9 @@ mod tests {
     fn md5_data() {
         let md5 = MD5::new();
 
-        let data = Box::from([0; 0x4000]);
+        let data = Arc::from([0; 0x4000]);
         md5.append(data);
-        let data = Box::from([0; 0x0d]);
+        let data = Arc::from([0; 0x0d]);
         md5.append(data);
 
         let digest = md5.result();
@@ -122,9 +123,9 @@ mod tests {
             digest => assert!(false, "unexpected digest: {:?}", digest),
         };
 
-        let data = Box::from([0; 0x4000]);
+        let data = Arc::from([0; 0x4000]);
         md5.append(data);
-        let data = Box::from([0; 0x0d]);
+        let data = Arc::from([0; 0x0d]);
         md5.append(data);
 
         let digest = md5.result();
