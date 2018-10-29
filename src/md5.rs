@@ -9,7 +9,7 @@ pub struct MD5 {
 }
 
 impl MD5 {
-    fn new() -> MD5 {
+    pub fn new() -> MD5 {
         use std::thread;
 
         let (tx_input, rx_input) = mpsc::sync_channel(4);

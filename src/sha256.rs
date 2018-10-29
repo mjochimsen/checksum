@@ -9,7 +9,7 @@ pub struct SHA256 {
 }
 
 impl SHA256 {
-    fn new() -> SHA256 {
+    pub fn new() -> SHA256 {
         use std::thread;
 
         let (tx_input, rx_input) = mpsc::sync_channel(4);

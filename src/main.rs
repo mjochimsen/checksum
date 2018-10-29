@@ -7,12 +7,16 @@ use std::io;
 use std::io::Read;
 use std::path;
 use std::process::exit;
+use std::sync::Arc;
+
 use crc::{crc32, Hasher32};
 
 mod config;
 mod digest;
 mod md5;
 mod sha256;
+
+use digest::Generator;
 
 use config::Config;
 
@@ -100,46 +104,38 @@ fn md5(path: &path::Path) -> Result<digest::Digest, io::Error> {
     let mut input = fs::File::open(path)?;
     let mut buffer = [0u8; 0x4000];
 
-    let (tx, rx) = digest::background_md5();
+    let md5 = md5::MD5::new();
 
     loop {
         let count = input.read(&mut buffer)?;
-        let data = Box::from(&buffer[0..count]);
-        tx.send(data).unwrap();
-        if count == 0 {
+        let data = Arc::from(&buffer[0..count]);
+        if count > 0 {
+            md5.append(data);
+        } else {
             break;
         }
     }
 
-    let digest = rx.recv();
-
-    match digest {
-        Ok(digest) => Ok(digest),
-        _ => Err(io::Error::new(io::ErrorKind::InvalidData, "error receiving checksum data")),
-    }
+    Ok(md5.result())
 }
 
 fn sha256(path: &path::Path) -> Result<digest::Digest, io::Error> {
     let mut input = fs::File::open(path)?;
     let mut buffer = [0u8; 0x4000];
 
-    let (tx, rx) = digest::background_sha256();
+    let sha256 = sha256::SHA256::new();
 
     loop {
         let count = input.read(&mut buffer)?;
-        let data = Box::from(&buffer[0..count]);
-        tx.send(data).unwrap();
-        if count == 0 {
+        let data = Arc::from(&buffer[0..count]);
+        if count > 0 {
+            sha256.append(data);
+        } else {
             break;
         }
     }
 
-    let digest = rx.recv();
-
-    match digest {
-        Ok(digest) => Ok(digest),
-        _ => Err(io::Error::new(io::ErrorKind::InvalidData, "error receiving checksum data")),
-    }
+    Ok(sha256.result())
 }
 
 #[cfg(test)]
