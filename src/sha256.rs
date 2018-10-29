@@ -1,7 +1,7 @@
 use std::sync::mpsc;
 use std::sync::Arc;
 
-use digest::Digest;
+use digest::{Digest, Generator};
 
 pub struct SHA256 {
     tx_input: mpsc::SyncSender<Message>,
@@ -9,7 +9,7 @@ pub struct SHA256 {
 }
 
 impl SHA256 {
-    pub fn new() -> SHA256 {
+    fn new() -> SHA256 {
         use std::thread;
 
         let (tx_input, rx_input) = mpsc::sync_channel(4);
@@ -21,13 +21,15 @@ impl SHA256 {
 
         SHA256 { tx_input, rx_result }
     }
+}
 
-    pub fn append(&self, data: Arc<[u8]>) {
+impl Generator for SHA256 {
+    fn append(&self, data: Arc<[u8]>) {
         self.tx_input.send(Message::Append(data))
             .expect("unexpected error appending to digest");
     }
 
-    pub fn result(&self) -> Digest {
+    fn result(&self) -> Digest {
         use std::time::Duration;
 
         self.tx_input.send(Message::Finish)

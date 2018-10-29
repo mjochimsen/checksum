@@ -2,6 +2,7 @@ extern crate crypto;
 
 use std::thread::spawn;
 use std::sync::mpsc::{channel, Receiver, Sender};
+use std::sync::Arc;
 use crypto::digest::Digest as DigestTrait;
 
 
@@ -11,6 +12,11 @@ pub enum Digest {
     SHA256([u8; 32]),
     // SHA512([u8; 64]),
     // RMD160([u8; 20]),
+}
+
+pub trait Generator {
+    fn append(&self, Arc<[u8]>);
+    fn result(&self) -> Digest;
 }
 
 use std::fmt;
