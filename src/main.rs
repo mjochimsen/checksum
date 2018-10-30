@@ -13,8 +13,6 @@ use crc::{crc32, Hasher32};
 
 mod config;
 mod digest;
-mod md5;
-mod sha256;
 
 use config::Config;
 

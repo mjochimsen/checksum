@@ -1,5 +1,8 @@
 extern crate crypto;
 
+mod md5;
+mod sha256;
+
 use std::sync::Arc;
 
 #[derive(Debug)]
@@ -31,12 +34,12 @@ impl fmt::Display for Digest {
 }
 
 pub fn md5() -> Box<Generator> {
-    let md5 = super::md5::MD5::new();
+    let md5 = md5::MD5::new();
     Box::new(md5)
 }
 
 pub fn sha256() -> Box<Generator> {
-    let sha256 = super::sha256::SHA256::new();
+    let sha256 = sha256::SHA256::new();
     Box::new(sha256)
 }
 
