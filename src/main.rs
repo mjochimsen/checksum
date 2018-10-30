@@ -16,8 +16,6 @@ mod digest;
 mod md5;
 mod sha256;
 
-use digest::Generator;
-
 use config::Config;
 
 fn main() {
@@ -104,7 +102,7 @@ fn md5(path: &path::Path) -> Result<digest::Digest, io::Error> {
     let mut input = fs::File::open(path)?;
     let mut buffer = [0u8; 0x4000];
 
-    let md5 = md5::MD5::new();
+    let md5 = digest::md5();
 
     loop {
         let count = input.read(&mut buffer)?;
@@ -123,7 +121,7 @@ fn sha256(path: &path::Path) -> Result<digest::Digest, io::Error> {
     let mut input = fs::File::open(path)?;
     let mut buffer = [0u8; 0x4000];
 
-    let sha256 = sha256::SHA256::new();
+    let sha256 = digest::sha256();
 
     loop {
         let count = input.read(&mut buffer)?;
