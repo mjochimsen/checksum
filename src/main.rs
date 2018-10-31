@@ -13,6 +13,7 @@ mod config;
 mod digest;
 
 use config::Config;
+use digest::{Digest, Generator};
 
 fn main() {
     let config = Config::new(args());
@@ -77,7 +78,33 @@ fn run(config: Config) -> Result<(), String> {
     Ok(())
 }
 
-fn crc32(path: &path::Path) -> Result<digest::Digest, io::Error> {
+fn digest_file(path: &path::Path, generators: Vec<Box<Generator>>) ->
+        Result<Vec<Digest>, io::Error> {
+
+    let mut input = fs::File::open(path)?;
+    let mut buffer = [0u8; 0x4000];
+
+    loop {
+        let count = input.read(&mut buffer)?;
+        if count > 0 {
+            let data: Arc<[u8]> = Arc::from(&buffer[0..count]);
+
+            for generator in generators.iter() {
+                generator.append(data.clone());
+            }
+        } else {
+            break;
+        }
+    }
+
+    let digests = generators.iter()
+                            .map(|generator| generator.result())
+                            .collect();
+
+    Ok(digests)
+}
+
+fn crc32(path: &path::Path) -> Result<Digest, io::Error> {
     let mut input = fs::File::open(path)?;
     let mut buffer = [0u8; 0x4000];
 
@@ -96,7 +123,7 @@ fn crc32(path: &path::Path) -> Result<digest::Digest, io::Error> {
     Ok(crc32.result())
 }
 
-fn md5(path: &path::Path) -> Result<digest::Digest, io::Error> {
+fn md5(path: &path::Path) -> Result<Digest, io::Error> {
     let mut input = fs::File::open(path)?;
     let mut buffer = [0u8; 0x4000];
 
@@ -115,7 +142,7 @@ fn md5(path: &path::Path) -> Result<digest::Digest, io::Error> {
     Ok(md5.result())
 }
 
-fn sha256(path: &path::Path) -> Result<digest::Digest, io::Error> {
+fn sha256(path: &path::Path) -> Result<Digest, io::Error> {
     let mut input = fs::File::open(path)?;
     let mut buffer = [0u8; 0x4000];
 
@@ -145,6 +172,56 @@ mod tests {
     fn fake_run() {
         let config = Config::new(vec!("test/zero-11171", "test/random-11171").iter());
         assert_eq!(run(config), Ok(()));
+    }
+
+    #[test]
+    fn digest_missing() {
+        let missing = Path::new("test/missing");
+        let generators = generators();
+
+        let error = digest_file(missing, generators).unwrap_err();
+
+        assert_eq!(error.kind(), io::ErrorKind::NotFound);
+    }
+
+    #[test]
+    fn digest_empty() {
+        let empty = Path::new("test/zero-0");
+        let generators = generators();
+
+        let digests = digest_file(empty, generators).unwrap();
+
+        assert_eq!(digests, vec![CRC32_ZERO_EMPTY,
+                                 MD5_ZERO_EMPTY,
+                                 SHA256_ZERO_EMPTY]);
+    }
+
+    #[test]
+    fn digest_zero() {
+        let empty = Path::new("test/zero-11171");
+        let generators = generators();
+
+        let digests = digest_file(empty, generators).unwrap();
+
+        assert_eq!(digests, vec![CRC32_ZERO_11171,
+                                 MD5_ZERO_11171,
+                                 SHA256_ZERO_11171]);
+    }
+
+    #[test]
+    fn digest_random() {
+        let empty = Path::new("test/random-11171");
+        let generators = generators();
+
+        let digests = digest_file(empty, generators).unwrap();
+
+        assert_eq!(digests, vec![CRC32_RANDOM_11171,
+                                 MD5_RANDOM_11171,
+                                 SHA256_RANDOM_11171]);
+    }
+
+    fn generators() -> Vec<Box<Generator>> {
+        vec![digest::crc32(), digest::md5(), digest::sha256()]
     }
 
     #[test]
