@@ -13,7 +13,7 @@ mod config;
 mod digest;
 
 use config::Config;
-use digest::{Digest, Generator};
+use digest::*;
 
 fn main() {
     let config = Config::new(args());
@@ -29,7 +29,7 @@ fn main() {
 }
 
 fn run(config: Config) -> Result<(), String> {
-    let generators = vec![digest::crc32(), digest::md5(), digest::sha256()];
+    let generators = vec![crc32(), md5(), sha256()];
 
     for filename in config.files {
         let path = path::Path::new(&filename);
@@ -96,63 +96,6 @@ fn digest_file(path: &path::Path, generators: &Vec<Box<Generator>>) ->
     Ok(digests)
 }
 
-fn crc32(path: &path::Path) -> Result<Digest, io::Error> {
-    let mut input = fs::File::open(path)?;
-    let mut buffer = [0u8; 0x4000];
-
-    let crc32 = digest::crc32();
-
-    loop {
-        let count = input.read(&mut buffer)?;
-        let data = Arc::from(&buffer[0..count]);
-        if count > 0 {
-            crc32.append(data);
-        } else {
-            break;
-        }
-    }
-
-    Ok(crc32.result())
-}
-
-fn md5(path: &path::Path) -> Result<Digest, io::Error> {
-    let mut input = fs::File::open(path)?;
-    let mut buffer = [0u8; 0x4000];
-
-    let md5 = digest::md5();
-
-    loop {
-        let count = input.read(&mut buffer)?;
-        let data = Arc::from(&buffer[0..count]);
-        if count > 0 {
-            md5.append(data);
-        } else {
-            break;
-        }
-    }
-
-    Ok(md5.result())
-}
-
-fn sha256(path: &path::Path) -> Result<Digest, io::Error> {
-    let mut input = fs::File::open(path)?;
-    let mut buffer = [0u8; 0x4000];
-
-    let sha256 = digest::sha256();
-
-    loop {
-        let count = input.read(&mut buffer)?;
-        let data = Arc::from(&buffer[0..count]);
-        if count > 0 {
-            sha256.append(data);
-        } else {
-            break;
-        }
-    }
-
-    Ok(sha256.result())
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -213,60 +156,6 @@ mod tests {
     }
 
     fn generators() -> Vec<Box<Generator>> {
-        vec![digest::crc32(), digest::md5(), digest::sha256()]
-    }
-
-    #[test]
-    fn crc32_zero() {
-        let zero = Path::new("test/zero-11171");
-        match crc32(zero) {
-            Ok(digest) => assert_eq!(digest, CRC32_ZERO_11171),
-            Err(error) => assert!(false, "unexpected error: {:?}", error),
-        };
-    }
-
-    #[test]
-    fn crc32_random() {
-        let random = Path::new("test/random-11171");
-        match crc32(random) {
-            Ok(digest) => assert_eq!(digest, CRC32_RANDOM_11171),
-            Err(error) => assert!(false, "unexpected error: {:?}", error),
-        };
-    }
-
-    #[test]
-    fn md5_zero() {
-        let zero = Path::new("test/zero-11171");
-        match md5(zero) {
-            Ok(digest) => assert_eq!(digest, MD5_ZERO_11171),
-            Err(error) => assert!(false, "unexpected error: {:?}", error),
-        };
-    }
-
-    #[test]
-    fn md5_random() {
-        let random = Path::new("test/random-11171");
-        match md5(random) {
-            Ok(digest) => assert_eq!(digest, MD5_RANDOM_11171),
-            Err(error) => assert!(false, "unexpected error: {:?}", error),
-        };
-    }
-
-    #[test]
-    fn sha256_zero() {
-        let zero = Path::new("test/zero-11171");
-        match sha256(zero) {
-            Ok(digest) => assert_eq!(digest, SHA256_ZERO_11171),
-            Err(error) => assert!(false, "unexpected error: {:?}", error),
-        };
-    }
-
-    #[test]
-    fn sha256_random() {
-        let random = Path::new("test/random-11171");
-        match sha256(random) {
-            Ok(digest) => assert_eq!(digest, SHA256_RANDOM_11171),
-            Err(error) => assert!(false, "unexpected error: {:?}", error),
-        };
+        vec![crc32(), md5(), sha256()]
     }
 }
