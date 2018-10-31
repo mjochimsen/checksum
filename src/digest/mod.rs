@@ -1,5 +1,6 @@
 extern crate crypto;
 
+mod crc32;
 mod md5;
 mod sha256;
 
@@ -7,6 +8,7 @@ use std::sync::Arc;
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum Digest {
+    CRC32(u32),
     MD5([u8; 16]),
     SHA256([u8; 32]),
     // SHA512([u8; 64]),
@@ -22,15 +24,26 @@ use std::fmt;
 
 impl fmt::Display for Digest {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let digest = match self {
-            Digest::MD5(digest) => digest.iter(),
-            Digest::SHA256(digest) => digest.iter(),
+        let bytes: Vec<u8> = match self {
+            Digest::CRC32(digest) => [
+                ((digest >> 24) & 0xffu32) as u8,
+                ((digest >> 16) & 0xffu32) as u8,
+                ((digest >> 8) & 0xffu32) as u8,
+                (digest & 0xffu32) as u8,
+            ].to_vec(),
+            Digest::MD5(digest) => digest.to_vec(),
+            Digest::SHA256(digest) => digest.to_vec(),
         };
-        let digest = digest.fold("".to_string(), |acc, byte| {
-            format!("{}{:02x}", acc, byte)
-        });
-        write!(f, "{}", digest)
+        for byte in bytes {
+            write!(f, "{:02x}", byte)?;
+        }
+        Ok(())
     }
+}
+
+pub fn crc32() -> Box<Generator> {
+    let crc32 = crc32::CRC32::new();
+    Box::new(crc32)
 }
 
 pub fn md5() -> Box<Generator> {
@@ -52,9 +65,20 @@ mod tests {
     use super::test_digests::*;
 
     #[test]
+    fn crc32_eq() {
+        assert!(CRC32_ZERO_EMPTY == CRC32_ZERO_EMPTY);
+        assert!(CRC32_ZERO_EMPTY != CRC32_ZERO_400D);
+        assert!(CRC32_ZERO_EMPTY != MD5_ZERO_EMPTY);
+        assert!(CRC32_ZERO_EMPTY != SHA256_ZERO_EMPTY);
+
+        assert_eq!(CRC32_ZERO_EMPTY, CRC32_ZERO_EMPTY);
+    }
+
+    #[test]
     fn md5_eq() {
         assert!(MD5_ZERO_EMPTY == MD5_ZERO_EMPTY);
         assert!(MD5_ZERO_EMPTY != MD5_ZERO_400D);
+        assert!(MD5_ZERO_EMPTY != CRC32_ZERO_EMPTY);
         assert!(MD5_ZERO_EMPTY != SHA256_ZERO_EMPTY);
 
         assert_eq!(MD5_ZERO_EMPTY, MD5_ZERO_EMPTY);
@@ -64,9 +88,15 @@ mod tests {
     fn sha256_eq() {
         assert!(SHA256_ZERO_EMPTY == SHA256_ZERO_EMPTY);
         assert!(SHA256_ZERO_EMPTY != SHA256_ZERO_400D);
+        assert!(SHA256_ZERO_EMPTY != CRC32_ZERO_EMPTY);
         assert!(SHA256_ZERO_EMPTY != MD5_ZERO_EMPTY);
 
         assert_eq!(SHA256_ZERO_EMPTY, SHA256_ZERO_EMPTY);
+    }
+
+    #[test]
+    fn crc32_format() {
+        assert_eq!(format!("{}", CRC32_ZERO_400D), "26a348bb");
     }
 
     #[test]
@@ -79,6 +109,13 @@ mod tests {
     fn sha256_format() {
         assert_eq!(format!("{}", SHA256_ZERO_EMPTY),
                    "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
+    }
+
+    #[test]
+    fn crc32_generator() {
+        let crc32 = crc32();
+        let digest = crc32.result();
+        assert_eq!(digest, CRC32_ZERO_EMPTY);
     }
 
     #[test]
