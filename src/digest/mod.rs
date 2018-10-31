@@ -5,7 +5,7 @@ mod sha256;
 
 use std::sync::Arc;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum Digest {
     MD5([u8; 16]),
     SHA256([u8; 32]),
@@ -50,6 +50,32 @@ pub mod test_digests;
 mod tests {
     use super::*;
     use super::test_digests::*;
+
+    #[test]
+    fn md5_eq() {
+        assert!(Digest::MD5(MD5_ZERO_EMPTY) ==
+                Digest::MD5(MD5_ZERO_EMPTY));
+        assert!(Digest::MD5(MD5_ZERO_EMPTY) !=
+                Digest::MD5(MD5_ZERO_400D));
+        assert!(Digest::MD5(MD5_ZERO_EMPTY) !=
+                Digest::SHA256(SHA256_ZERO_EMPTY));
+
+        assert_eq!(Digest::MD5(MD5_ZERO_EMPTY),
+                   Digest::MD5(MD5_ZERO_EMPTY));
+    }
+
+    #[test]
+    fn sha256_eq() {
+        assert!(Digest::SHA256(SHA256_ZERO_EMPTY) ==
+                Digest::SHA256(SHA256_ZERO_EMPTY));
+        assert!(Digest::SHA256(SHA256_ZERO_EMPTY) !=
+                Digest::SHA256(SHA256_ZERO_400D));
+        assert!(Digest::SHA256(SHA256_ZERO_EMPTY) !=
+                Digest::MD5(MD5_ZERO_EMPTY));
+
+        assert_eq!(Digest::SHA256(SHA256_ZERO_EMPTY),
+                   Digest::SHA256(SHA256_ZERO_EMPTY));
+    }
 
     #[test]
     fn md5_format() {
