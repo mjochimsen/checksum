@@ -83,10 +83,7 @@ mod tests {
 
         let digest = sha256.result();
 
-        match digest {
-            Digest::SHA256(value) => assert_eq!(value, SHA256_ZERO_EMPTY),
-            digest => assert!(false, "unexpected digest: {:?}", digest),
-        };
+        assert_eq!(digest, SHA256_ZERO_EMPTY);
     }
 
     #[test]
@@ -100,10 +97,7 @@ mod tests {
 
         let digest = sha256.result();
 
-        match digest {
-            Digest::SHA256(value) => assert_eq!(value, SHA256_ZERO_400D),
-            digest => assert!(false, "unexpected digest: {:?}", digest),
-        };
+        assert_eq!(digest, SHA256_ZERO_400D);
     }
 
     #[test]
@@ -112,10 +106,7 @@ mod tests {
 
         let digest = sha256.result();
 
-        match digest {
-            Digest::SHA256(value) => assert_eq!(value, SHA256_ZERO_EMPTY),
-            digest => assert!(false, "unexpected digest: {:?}", digest),
-        };
+        assert_eq!(digest, SHA256_ZERO_EMPTY);
 
         let data = Arc::from([0; 0x4000]);
         sha256.append(data);
@@ -124,17 +115,11 @@ mod tests {
 
         let digest = sha256.result();
 
-        match digest {
-            Digest::SHA256(value) => assert_eq!(value, SHA256_ZERO_400D),
-            digest => assert!(false, "unexpected digest: {:?}", digest),
-        };
+        assert_eq!(digest, SHA256_ZERO_400D);
 
         let digest = sha256.result();
 
-        match digest {
-            Digest::SHA256(value) => assert_eq!(value, SHA256_ZERO_EMPTY),
-            digest => assert!(false, "unexpected digest: {:?}", digest),
-        };
+        assert_eq!(digest, SHA256_ZERO_EMPTY);
     }
 }
 

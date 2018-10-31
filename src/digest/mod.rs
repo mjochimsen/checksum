@@ -53,59 +53,45 @@ mod tests {
 
     #[test]
     fn md5_eq() {
-        assert!(Digest::MD5(MD5_ZERO_EMPTY) ==
-                Digest::MD5(MD5_ZERO_EMPTY));
-        assert!(Digest::MD5(MD5_ZERO_EMPTY) !=
-                Digest::MD5(MD5_ZERO_400D));
-        assert!(Digest::MD5(MD5_ZERO_EMPTY) !=
-                Digest::SHA256(SHA256_ZERO_EMPTY));
+        assert!(MD5_ZERO_EMPTY == MD5_ZERO_EMPTY);
+        assert!(MD5_ZERO_EMPTY != MD5_ZERO_400D);
+        assert!(MD5_ZERO_EMPTY != SHA256_ZERO_EMPTY);
 
-        assert_eq!(Digest::MD5(MD5_ZERO_EMPTY),
-                   Digest::MD5(MD5_ZERO_EMPTY));
+        assert_eq!(MD5_ZERO_EMPTY, MD5_ZERO_EMPTY);
     }
 
     #[test]
     fn sha256_eq() {
-        assert!(Digest::SHA256(SHA256_ZERO_EMPTY) ==
-                Digest::SHA256(SHA256_ZERO_EMPTY));
-        assert!(Digest::SHA256(SHA256_ZERO_EMPTY) !=
-                Digest::SHA256(SHA256_ZERO_400D));
-        assert!(Digest::SHA256(SHA256_ZERO_EMPTY) !=
-                Digest::MD5(MD5_ZERO_EMPTY));
+        assert!(SHA256_ZERO_EMPTY == SHA256_ZERO_EMPTY);
+        assert!(SHA256_ZERO_EMPTY != SHA256_ZERO_400D);
+        assert!(SHA256_ZERO_EMPTY != MD5_ZERO_EMPTY);
 
-        assert_eq!(Digest::SHA256(SHA256_ZERO_EMPTY),
-                   Digest::SHA256(SHA256_ZERO_EMPTY));
+        assert_eq!(SHA256_ZERO_EMPTY, SHA256_ZERO_EMPTY);
     }
 
     #[test]
     fn md5_format() {
-        let md5 = Digest::MD5(MD5_ZERO_EMPTY);
-        assert_eq!(format!("{}", md5), "d41d8cd98f00b204e9800998ecf8427e");
+        assert_eq!(format!("{}", MD5_ZERO_EMPTY),
+                   "d41d8cd98f00b204e9800998ecf8427e");
     }
 
     #[test]
     fn sha256_format() {
-        let sha256 = Digest::SHA256(SHA256_ZERO_EMPTY);
-        assert_eq!(format!("{}", sha256), "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
+        assert_eq!(format!("{}", SHA256_ZERO_EMPTY),
+                   "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
     }
 
     #[test]
     fn md5_generator() {
         let md5 = md5();
         let digest = md5.result();
-        match digest {
-            Digest::MD5(value) => assert_eq!(value, MD5_ZERO_EMPTY),
-            digest => assert!(false, "unexpected digest: {:?}", digest),
-        };
+        assert_eq!(digest, MD5_ZERO_EMPTY);
     }
 
     #[test]
     fn sha256_generator() {
         let sha256 = sha256();
         let digest = sha256.result();
-        match digest {
-            Digest::SHA256(value) => assert_eq!(value, SHA256_ZERO_EMPTY),
-            digest => assert!(false, "unexpected digest: {:?}", digest),
-        };
+        assert_eq!(digest, SHA256_ZERO_EMPTY);
     }
 }

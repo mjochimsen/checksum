@@ -169,9 +169,7 @@ mod tests {
     fn md5_zero() {
         let zero = Path::new("test/zero-11171");
         match md5(zero) {
-            Ok(digest::Digest::MD5(value)) =>
-                assert_eq!(value, MD5_ZERO_11171),
-            Ok(digest) => assert!(false, "unexpected digest: {:?}", digest),
+            Ok(digest) => assert_eq!(digest, MD5_ZERO_11171),
             Err(error) => assert!(false, "unexpected error: {:?}", error),
         };
     }
@@ -180,9 +178,7 @@ mod tests {
     fn md5_random() {
         let random = Path::new("test/random-11171");
         match md5(random) {
-            Ok(digest::Digest::MD5(value)) =>
-                assert_eq!(value, MD5_RANDOM_11171),
-            Ok(digest) => assert!(false, "unexpected digest: {:?}", digest),
+            Ok(digest) => assert_eq!(digest, MD5_RANDOM_11171),
             Err(error) => assert!(false, "unexpected error: {:?}", error),
         };
     }
@@ -191,9 +187,7 @@ mod tests {
     fn sha256_zero() {
         let zero = Path::new("test/zero-11171");
         match sha256(zero) {
-            Ok(digest::Digest::SHA256(value)) =>
-                assert_eq!(value, SHA256_ZERO_11171),
-            Ok(digest) => assert!(false, "unexpected digest: {:?}", digest),
+            Ok(digest) => assert_eq!(digest, SHA256_ZERO_11171),
             Err(error) => assert!(false, "unexpected error: {:?}", error),
         };
     }
@@ -202,9 +196,7 @@ mod tests {
     fn sha256_random() {
         let random = Path::new("test/random-11171");
         match sha256(random) {
-            Ok(digest::Digest::SHA256(value)) =>
-                assert_eq!(value, SHA256_RANDOM_11171),
-            Ok(digest) => assert!(false, "unexpected digest: {:?}", digest),
+            Ok(digest) => assert_eq!(digest, SHA256_RANDOM_11171),
             Err(error) => assert!(false, "unexpected error: {:?}", error),
         };
     }
