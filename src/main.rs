@@ -139,16 +139,17 @@ mod tests {
     use super::*;
     use config::Config;
     use std::path::Path;
+    use digest::test_digests::*;
 
     #[test]
     fn fake_run() {
-        let config = Config::new(vec!("test/zero.data", "test/random.data").iter());
+        let config = Config::new(vec!("test/zero-11171", "test/random-11171").iter());
         assert_eq!(run(config), Ok(()));
     }
 
     #[test]
     fn crc32_zero() {
-        let zero = Path::new("test/zero.data");
+        let zero = Path::new("test/zero-11171");
         match crc32(zero) {
             Ok(value) => assert_eq!(value, 0x5dc1d8ba),
             Err(error) => assert!(false, "unexpected error: {:?}", error),
@@ -157,7 +158,7 @@ mod tests {
 
     #[test]
     fn crc32_random() {
-        let random = Path::new("test/random.data");
+        let random = Path::new("test/random-11171");
         match crc32(random) {
             Ok(value) => assert_eq!(value, 0xff70a8ee),
             Err(error) => assert!(false, "unexpected error: {:?}", error),
@@ -166,13 +167,10 @@ mod tests {
 
     #[test]
     fn md5_zero() {
-        let zero = Path::new("test/zero.data");
+        let zero = Path::new("test/zero-11171");
         match md5(zero) {
             Ok(digest::Digest::MD5(value)) =>
-                assert_eq!(value, [
-                    0x41, 0xa2, 0x2d, 0x1e, 0xe7, 0x89, 0xde, 0xcb,
-                    0xfb, 0xd4, 0x92, 0x4e, 0xc2, 0x1e, 0x53, 0xc9
-                ]),
+                assert_eq!(value, MD5_ZERO_11171),
             Ok(digest) => assert!(false, "unexpected digest: {:?}", digest),
             Err(error) => assert!(false, "unexpected error: {:?}", error),
         };
@@ -180,13 +178,10 @@ mod tests {
 
     #[test]
     fn md5_random() {
-        let random = Path::new("test/random.data");
+        let random = Path::new("test/random-11171");
         match md5(random) {
             Ok(digest::Digest::MD5(value)) =>
-                assert_eq!(value, [
-                    0xff, 0x8a, 0xe3, 0xcf, 0x94, 0x4c, 0xdd, 0xde,
-                    0xa7, 0x19, 0x1c, 0x90, 0x6a, 0xfe, 0x0c, 0x81
-                ]),
+                assert_eq!(value, MD5_RANDOM_11171),
             Ok(digest) => assert!(false, "unexpected digest: {:?}", digest),
             Err(error) => assert!(false, "unexpected error: {:?}", error),
         };
@@ -194,15 +189,10 @@ mod tests {
 
     #[test]
     fn sha256_zero() {
-        let zero = Path::new("test/zero.data");
+        let zero = Path::new("test/zero-11171");
         match sha256(zero) {
             Ok(digest::Digest::SHA256(value)) =>
-                assert_eq!(value, [
-                    0xb3, 0xae, 0x04, 0xa0, 0x71, 0x30, 0x26, 0xc8,
-                    0xcb, 0xf8, 0x8b, 0x6c, 0xbf, 0xf1, 0x73, 0xf6,
-                    0x8a, 0x27, 0xcd, 0x37, 0x64, 0x14, 0xc4, 0x66,
-                    0x45, 0xdd, 0x1a, 0x22, 0x93, 0x48, 0x6c, 0x99
-                ]),
+                assert_eq!(value, SHA256_ZERO_11171),
             Ok(digest) => assert!(false, "unexpected digest: {:?}", digest),
             Err(error) => assert!(false, "unexpected error: {:?}", error),
         };
@@ -210,15 +200,10 @@ mod tests {
 
     #[test]
     fn sha256_random() {
-        let random = Path::new("test/random.data");
+        let random = Path::new("test/random-11171");
         match sha256(random) {
             Ok(digest::Digest::SHA256(value)) =>
-                assert_eq!(value, [
-                    0x51, 0x52, 0xc2, 0xfe, 0xad, 0x7d, 0x46, 0xcd,
-                    0x79, 0x11, 0x5c, 0xd0, 0x93, 0x53, 0x46, 0x47,
-                    0xd8, 0x06, 0xd7, 0x4d, 0xa1, 0xaf, 0xda, 0x90,
-                    0xbd, 0xc0, 0x6d, 0x4e, 0x7e, 0x40, 0xc5, 0x2d
-                ]),
+                assert_eq!(value, SHA256_RANDOM_11171),
             Ok(digest) => assert!(false, "unexpected digest: {:?}", digest),
             Err(error) => assert!(false, "unexpected error: {:?}", error),
         };

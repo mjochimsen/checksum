@@ -75,15 +75,7 @@ fn background_md5(rx_input: mpsc::Receiver<Message>,
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    const ZERO_EMPTY: [u8; 16] = [
-        0xd4, 0x1d, 0x8c, 0xd9, 0x8f, 0x00, 0xb2, 0x04,
-        0xe9, 0x80, 0x09, 0x98, 0xec, 0xf8, 0x42, 0x7e
-    ];
-    const ZERO_400D: [u8; 16] = [
-        0x96, 0xf6, 0x4e, 0x17, 0x9f, 0x77, 0x7e, 0x6e,
-        0xda, 0x0c, 0xaa, 0x2d, 0x87, 0x93, 0x56, 0xc9
-    ];
+    use super::super::test_digests::*;
 
     #[test]
     fn md5_empty() {
@@ -92,7 +84,7 @@ mod tests {
         let digest = md5.result();
 
         match digest {
-            Digest::MD5(value) => assert_eq!(value, ZERO_EMPTY),
+            Digest::MD5(value) => assert_eq!(value, MD5_ZERO_EMPTY),
             digest => assert!(false, "unexpected digest: {:?}", digest),
         };
     }
@@ -109,7 +101,7 @@ mod tests {
         let digest = md5.result();
 
         match digest {
-            Digest::MD5(value) => assert_eq!(value, ZERO_400D),
+            Digest::MD5(value) => assert_eq!(value, MD5_ZERO_400D),
             digest => assert!(false, "unexpected digest: {:?}", digest),
         };
     }
@@ -121,7 +113,7 @@ mod tests {
         let digest = md5.result();
 
         match digest {
-            Digest::MD5(value) => assert_eq!(value, ZERO_EMPTY),
+            Digest::MD5(value) => assert_eq!(value, MD5_ZERO_EMPTY),
             digest => assert!(false, "unexpected digest: {:?}", digest),
         };
 
@@ -133,14 +125,14 @@ mod tests {
         let digest = md5.result();
 
         match digest {
-            Digest::MD5(value) => assert_eq!(value, ZERO_400D),
+            Digest::MD5(value) => assert_eq!(value, MD5_ZERO_400D),
             digest => assert!(false, "unexpected digest: {:?}", digest),
         };
 
         let digest = md5.result();
 
         match digest {
-            Digest::MD5(value) => assert_eq!(value, ZERO_EMPTY),
+            Digest::MD5(value) => assert_eq!(value, MD5_ZERO_EMPTY),
             digest => assert!(false, "unexpected digest: {:?}", digest),
         };
     }

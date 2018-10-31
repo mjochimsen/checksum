@@ -75,19 +75,7 @@ fn background_sha256(rx_input: mpsc::Receiver<Message>,
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    const ZERO_EMPTY: [u8; 32] = [
-        0xe3, 0xb0, 0xc4, 0x42, 0x98, 0xfc, 0x1c, 0x14,
-        0x9a, 0xfb, 0xf4, 0xc8, 0x99, 0x6f, 0xb9, 0x24,
-        0x27, 0xae, 0x41, 0xe4, 0x64, 0x9b, 0x93, 0x4c,
-        0xa4, 0x95, 0x99, 0x1b, 0x78, 0x52, 0xb8, 0x55
-    ];
-    const ZERO_400D: [u8; 32] = [
-        0x10, 0xbb, 0x1d, 0xbb, 0x5b, 0xcf, 0xb2, 0x03,
-        0xd5, 0x83, 0x0e, 0x8a, 0x5b, 0xf4, 0xff, 0x49,
-        0xba, 0x1d, 0x0b, 0xd9, 0x18, 0x69, 0x72, 0x50,
-        0xf8, 0x94, 0x71, 0xab, 0x22, 0xf4, 0xa5, 0x99
-    ];
+    use super::super::test_digests::*;
 
     #[test]
     fn sha256_empty() {
@@ -96,7 +84,7 @@ mod tests {
         let digest = sha256.result();
 
         match digest {
-            Digest::SHA256(value) => assert_eq!(value, ZERO_EMPTY),
+            Digest::SHA256(value) => assert_eq!(value, SHA256_ZERO_EMPTY),
             digest => assert!(false, "unexpected digest: {:?}", digest),
         };
     }
@@ -113,7 +101,7 @@ mod tests {
         let digest = sha256.result();
 
         match digest {
-            Digest::SHA256(value) => assert_eq!(value, ZERO_400D),
+            Digest::SHA256(value) => assert_eq!(value, SHA256_ZERO_400D),
             digest => assert!(false, "unexpected digest: {:?}", digest),
         };
     }
@@ -125,7 +113,7 @@ mod tests {
         let digest = sha256.result();
 
         match digest {
-            Digest::SHA256(value) => assert_eq!(value, ZERO_EMPTY),
+            Digest::SHA256(value) => assert_eq!(value, SHA256_ZERO_EMPTY),
             digest => assert!(false, "unexpected digest: {:?}", digest),
         };
 
@@ -137,14 +125,14 @@ mod tests {
         let digest = sha256.result();
 
         match digest {
-            Digest::SHA256(value) => assert_eq!(value, ZERO_400D),
+            Digest::SHA256(value) => assert_eq!(value, SHA256_ZERO_400D),
             digest => assert!(false, "unexpected digest: {:?}", digest),
         };
 
         let digest = sha256.result();
 
         match digest {
-            Digest::SHA256(value) => assert_eq!(value, ZERO_EMPTY),
+            Digest::SHA256(value) => assert_eq!(value, SHA256_ZERO_EMPTY),
             digest => assert!(false, "unexpected digest: {:?}", digest),
         };
     }

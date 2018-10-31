@@ -44,44 +44,31 @@ pub fn sha256() -> Box<Generator> {
 }
 
 #[cfg(test)]
+pub mod test_digests;
+
+#[cfg(test)]
 mod tests {
     use super::*;
+    use super::test_digests::*;
 
     #[test]
     fn md5_format() {
-        let md5 = Digest::MD5([0xd4, 0x1d, 0x8c, 0xd9, 0x8f, 0x00, 0xb2, 0x04,
-                               0xe9, 0x80, 0x09, 0x98, 0xec, 0xf8, 0x42, 0x7e]);
+        let md5 = Digest::MD5(MD5_ZERO_EMPTY);
         assert_eq!(format!("{}", md5), "d41d8cd98f00b204e9800998ecf8427e");
     }
 
     #[test]
     fn sha256_format() {
-        let sha256 = Digest::SHA256([
-            0xe3, 0xb0, 0xc4, 0x42, 0x98, 0xfc, 0x1c, 0x14,
-            0x9a, 0xfb, 0xf4, 0xc8, 0x99, 0x6f, 0xb9, 0x24,
-            0x27, 0xae, 0x41, 0xe4, 0x64, 0x9b, 0x93, 0x4c,
-            0xa4, 0x95, 0x99, 0x1b, 0x78, 0x52, 0xb8, 0x55
-        ]);
+        let sha256 = Digest::SHA256(SHA256_ZERO_EMPTY);
         assert_eq!(format!("{}", sha256), "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
     }
-
-    const MD5_ZERO: [u8; 16] = [
-        0xd4, 0x1d, 0x8c, 0xd9, 0x8f, 0x00, 0xb2, 0x04,
-        0xe9, 0x80, 0x09, 0x98, 0xec, 0xf8, 0x42, 0x7e
-    ];
-    const SHA256_ZERO: [u8; 32] = [
-        0xe3, 0xb0, 0xc4, 0x42, 0x98, 0xfc, 0x1c, 0x14,
-        0x9a, 0xfb, 0xf4, 0xc8, 0x99, 0x6f, 0xb9, 0x24,
-        0x27, 0xae, 0x41, 0xe4, 0x64, 0x9b, 0x93, 0x4c,
-        0xa4, 0x95, 0x99, 0x1b, 0x78, 0x52, 0xb8, 0x55
-     ];
 
     #[test]
     fn md5_generator() {
         let md5 = md5();
         let digest = md5.result();
         match digest {
-            Digest::MD5(value) => assert_eq!(value, MD5_ZERO),
+            Digest::MD5(value) => assert_eq!(value, MD5_ZERO_EMPTY),
             digest => assert!(false, "unexpected digest: {:?}", digest),
         };
     }
@@ -91,7 +78,7 @@ mod tests {
         let sha256 = sha256();
         let digest = sha256.result();
         match digest {
-            Digest::SHA256(value) => assert_eq!(value, SHA256_ZERO),
+            Digest::SHA256(value) => assert_eq!(value, SHA256_ZERO_EMPTY),
             digest => assert!(false, "unexpected digest: {:?}", digest),
         };
     }
