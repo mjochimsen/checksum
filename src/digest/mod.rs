@@ -111,7 +111,8 @@ mod tests {
     #[test]
     fn sha256_format() {
         assert_eq!(format!("{}", SHA256_ZERO_EMPTY),
-                   "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
+                   concat!("e3b0c44298fc1c149afbf4c8996fb924",
+                           "27ae41e4649b934ca495991b7852b855"));
     }
 
     #[test]
