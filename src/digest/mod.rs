@@ -24,21 +24,23 @@ use std::fmt;
 
 impl fmt::Display for Digest {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let bytes: Vec<u8> = match self {
-            Digest::CRC32(digest) => [
-                ((digest >> 24) & 0xffu32) as u8,
-                ((digest >> 16) & 0xffu32) as u8,
-                ((digest >> 8) & 0xffu32) as u8,
-                (digest & 0xffu32) as u8,
-            ].to_vec(),
-            Digest::MD5(digest) => digest.to_vec(),
-            Digest::SHA256(digest) => digest.to_vec(),
-        };
-        for byte in bytes {
-            write!(f, "{:02x}", byte)?;
+        match self {
+            Digest::CRC32(digest) => format_u32(f, *digest),
+            Digest::MD5(digest) => format_bytes(f, digest),
+            Digest::SHA256(digest) => format_bytes(f, digest),
         }
-        Ok(())
     }
+}
+
+fn format_u32(f: &mut fmt::Formatter, value: u32) -> fmt::Result {
+    write!(f, "{:08x}", value)
+}
+
+fn format_bytes(f: &mut fmt::Formatter, bytes: &[u8]) -> fmt::Result {
+    for byte in bytes {
+        write!(f, "{:02x}", byte)?;
+    }
+    Ok(())
 }
 
 pub fn crc32() -> Box<Generator> {
@@ -96,6 +98,7 @@ mod tests {
 
     #[test]
     fn crc32_format() {
+        assert_eq!(format!("{}", CRC32_ZERO_EMPTY), "00000000");
         assert_eq!(format!("{}", CRC32_ZERO_400D), "26a348bb");
     }
 
