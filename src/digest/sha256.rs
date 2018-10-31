@@ -50,7 +50,6 @@ enum Message {
 
 fn background_sha256(rx_input: mpsc::Receiver<Message>,
                      tx_result: mpsc::Sender<[u8; 32]>) {
-    extern crate crypto;
     use crypto::digest::Digest as DigestTrait;
 
     let mut sha256 = crypto::sha2::Sha256::new();

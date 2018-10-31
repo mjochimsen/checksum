@@ -50,7 +50,6 @@ enum Message {
 
 fn background_md5(rx_input: mpsc::Receiver<Message>,
                   tx_result: mpsc::Sender<[u8; 16]>) {
-    extern crate crypto;
     use crypto::digest::Digest as DigestTrait;
 
     let mut md5 = crypto::md5::Md5::new();

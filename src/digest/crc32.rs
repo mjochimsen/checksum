@@ -50,7 +50,6 @@ enum Message {
 
 fn background_crc32(rx_input: mpsc::Receiver<Message>,
                     tx_result: mpsc::Sender<u32>) {
-    extern crate crc;
     use crc::{crc32, Hasher32};
 
     let mut crc32 = crc32::Digest::new(crc32::IEEE);
