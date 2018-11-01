@@ -34,18 +34,6 @@ fn run(config: Config) -> Result<(), String> {
     for filename in config.files {
         let path = path::Path::new(&filename);
 
-        let metadata = match fs::metadata(path) {
-            Ok(metadata) => metadata,
-            Err(_error) => {
-                let error = format!("unable to get metadata for {}", filename);
-                return Err(error);
-            },
-        };
-
-        let size = metadata.len();
-
-        println!("SIZE ({}): {}", filename, size);
-
         let digests = digest_file(path, &generators);
 
         let digests = match digests {
