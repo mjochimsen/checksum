@@ -4,6 +4,7 @@ mod crc32;
 mod md5;
 mod sha256;
 mod sha512;
+mod rmd160;
 
 use std::sync::Arc;
 
@@ -12,7 +13,7 @@ pub enum Digest {
     MD5([u8; 16]),
     SHA256([u8; 32]),
     SHA512([u8; 64]),
-    // RMD160([u8; 20]),
+    RMD160([u8; 20]),
 }
 
 impl PartialEq for Digest {
@@ -27,6 +28,8 @@ impl PartialEq for Digest {
             (Digest::SHA512(left), Digest::SHA512(right)) =>
                 left[..31] == right[..31] &&
                 left[32..] == right[32..],
+            (Digest::RMD160(left), Digest::RMD160(right)) =>
+                left == right,
             _ => false,
         }
     }
@@ -59,6 +62,11 @@ impl fmt::Debug for Digest {
                 format_bytes(f, digest)?;
                 write!(f, ")")
             }
+            Digest::RMD160(digest) => {
+                write!(f, "RMD160(")?;
+                format_bytes(f, digest)?;
+                write!(f, ")")
+            }
         }
     }
 }
@@ -70,6 +78,7 @@ impl fmt::Display for Digest {
             Digest::MD5(digest) => format_bytes(f, digest),
             Digest::SHA256(digest) => format_bytes(f, digest),
             Digest::SHA512(digest) => format_bytes(f, digest),
+            Digest::RMD160(digest) => format_bytes(f, digest),
         }
     }
 }
@@ -110,6 +119,11 @@ pub fn sha512() -> Box<Generator> {
     Box::new(sha512)
 }
 
+pub fn rmd160() -> Box<Generator> {
+    let rmd160 = rmd160::RMD160::new();
+    Box::new(rmd160)
+}
+
 #[cfg(test)]
 pub mod test_digests;
 
@@ -125,6 +139,7 @@ mod tests {
         assert!(CRC32_ZERO_EMPTY != MD5_ZERO_EMPTY);
         assert!(CRC32_ZERO_EMPTY != SHA256_ZERO_EMPTY);
         assert!(CRC32_ZERO_EMPTY != SHA512_ZERO_EMPTY);
+        assert!(CRC32_ZERO_EMPTY != RMD160_ZERO_EMPTY);
 
         assert_eq!(CRC32_ZERO_EMPTY, CRC32_ZERO_EMPTY);
     }
@@ -136,6 +151,7 @@ mod tests {
         assert!(MD5_ZERO_EMPTY != CRC32_ZERO_EMPTY);
         assert!(MD5_ZERO_EMPTY != SHA256_ZERO_EMPTY);
         assert!(MD5_ZERO_EMPTY != SHA512_ZERO_EMPTY);
+        assert!(MD5_ZERO_EMPTY != RMD160_ZERO_EMPTY);
 
         assert_eq!(MD5_ZERO_EMPTY, MD5_ZERO_EMPTY);
     }
@@ -147,6 +163,7 @@ mod tests {
         assert!(SHA256_ZERO_EMPTY != CRC32_ZERO_EMPTY);
         assert!(SHA256_ZERO_EMPTY != MD5_ZERO_EMPTY);
         assert!(SHA256_ZERO_EMPTY != SHA512_ZERO_EMPTY);
+        assert!(SHA256_ZERO_EMPTY != RMD160_ZERO_EMPTY);
 
         assert_eq!(SHA256_ZERO_EMPTY, SHA256_ZERO_EMPTY);
     }
@@ -158,8 +175,21 @@ mod tests {
         assert!(SHA512_ZERO_EMPTY != CRC32_ZERO_EMPTY);
         assert!(SHA512_ZERO_EMPTY != MD5_ZERO_EMPTY);
         assert!(SHA512_ZERO_EMPTY != SHA256_ZERO_EMPTY);
+        assert!(SHA512_ZERO_EMPTY != RMD160_ZERO_EMPTY);
 
         assert_eq!(SHA512_ZERO_EMPTY, SHA512_ZERO_EMPTY);
+    }
+
+    #[test]
+    fn rmd160_eq() {
+        assert!(RMD160_ZERO_EMPTY == RMD160_ZERO_EMPTY);
+        assert!(RMD160_ZERO_EMPTY != RMD160_ZERO_400D);
+        assert!(RMD160_ZERO_EMPTY != CRC32_ZERO_EMPTY);
+        assert!(RMD160_ZERO_EMPTY != MD5_ZERO_EMPTY);
+        assert!(RMD160_ZERO_EMPTY != SHA256_ZERO_EMPTY);
+        assert!(RMD160_ZERO_EMPTY != SHA512_ZERO_EMPTY);
+
+        assert_eq!(RMD160_ZERO_EMPTY, RMD160_ZERO_EMPTY);
     }
 
     #[test]
@@ -191,6 +221,12 @@ mod tests {
     }
 
     #[test]
+    fn rmd160_format() {
+        assert_eq!(format!("{}", RMD160_ZERO_EMPTY),
+                   "9c1185a5c5e9fc54612808977ee8f548b2258d31");
+    }
+
+    #[test]
     fn crc32_generator() {
         let crc32 = crc32();
         let digest = crc32.result();
@@ -216,5 +252,12 @@ mod tests {
         let sha512 = sha512();
         let digest = sha512.result();
         assert_eq!(digest, SHA512_ZERO_EMPTY);
+    }
+
+    #[test]
+    fn rmd160_generator() {
+        let rmd160 = rmd160();
+        let digest = rmd160.result();
+        assert_eq!(digest, RMD160_ZERO_EMPTY);
     }
 }

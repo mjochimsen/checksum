@@ -29,7 +29,7 @@ fn main() {
 }
 
 fn run(config: Config) -> Result<(), String> {
-    let generators = vec![crc32(), md5(), sha256(), sha512()];
+    let generators = vec![crc32(), md5(), sha256(), sha512(), rmd160()];
 
     for filename in config.files {
         let path = path::Path::new(&filename);
@@ -62,6 +62,7 @@ fn run(config: Config) -> Result<(), String> {
                 Digest::MD5(_) => "MD5",
                 Digest::SHA256(_) => "SHA256",
                 Digest::SHA512(_) => "SHA512",
+                Digest::RMD160(_) => "RMD160",
             };
 
             println!("{} ({}): {}", name, filename, digest);
@@ -130,7 +131,8 @@ mod tests {
         assert_eq!(digests, vec![CRC32_ZERO_EMPTY,
                                  MD5_ZERO_EMPTY,
                                  SHA256_ZERO_EMPTY,
-                                 SHA512_ZERO_EMPTY]);
+                                 SHA512_ZERO_EMPTY,
+                                 RMD160_ZERO_EMPTY]);
     }
 
     #[test]
@@ -143,7 +145,8 @@ mod tests {
         assert_eq!(digests, vec![CRC32_ZERO_11171,
                                  MD5_ZERO_11171,
                                  SHA256_ZERO_11171,
-                                 SHA512_ZERO_11171]);
+                                 SHA512_ZERO_11171,
+                                 RMD160_ZERO_11171]);
     }
 
     #[test]
@@ -156,10 +159,11 @@ mod tests {
         assert_eq!(digests, vec![CRC32_RANDOM_11171,
                                  MD5_RANDOM_11171,
                                  SHA256_RANDOM_11171,
-                                 SHA512_RANDOM_11171]);
+                                 SHA512_RANDOM_11171,
+                                 RMD160_RANDOM_11171]);
     }
 
     fn generators() -> Vec<Box<Generator>> {
-        vec![crc32(), md5(), sha256(), sha512()]
+        vec![crc32(), md5(), sha256(), sha512(), rmd160()]
     }
 }
