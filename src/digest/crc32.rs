@@ -48,23 +48,27 @@ enum Message {
     Finish,
 }
 
+#[link(name = "z")]
+extern {
+    fn crc32(crc: u32, buf: *const u8, len: u32) -> u32;
+}
+
 fn background_crc32(rx_input: mpsc::Receiver<Message>,
                     tx_result: mpsc::Sender<u32>) {
-    use crc::{crc32, Hasher32};
-
-    let mut crc32 = crc32::Digest::new(crc32::IEEE);
+    let mut crc: u32 = 0;
 
     loop {
         let msg = rx_input.recv();
 
         match msg {
-            Ok(Message::Append(data)) => crc32.write(&*data),
+            Ok(Message::Append(data)) => {
+                let len = data.len() as u32;
+                crc = unsafe { crc32(crc, data.as_ptr(), len) };
+            }
             Ok(Message::Finish) => {
-                let mut result = crc32.sum32();
-
-                tx_result.send(result).unwrap();
-                crc32.reset()
-            },
+                tx_result.send(crc).unwrap();
+                crc = 0;
+            }
             Err(_) => break,
         }
     }
@@ -74,6 +78,13 @@ fn background_crc32(rx_input: mpsc::Receiver<Message>,
 mod tests {
     use super::*;
     use super::super::test_digests::*;
+
+    #[test]
+    fn zlib_crc32() {
+        let data = [0; 32];
+        let crc = unsafe { crc32(0, data.as_ptr(), data.len() as u32) };
+        assert_eq!(crc, 0x190a55ad);
+    }
 
     #[test]
     fn crc32_empty() {

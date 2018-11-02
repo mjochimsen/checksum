@@ -1,5 +1,5 @@
-extern crate crc;
 extern crate crypto;
+extern crate libc;
 
 use std::env::args;
 use std::fs;
