@@ -64,7 +64,7 @@ fn digest_file(path: &path::Path, generators: &Vec<Box<Generator>>) ->
         Result<Vec<Digest>, io::Error> {
 
     let mut input = fs::File::open(path)?;
-    let mut buffer = [0u8; 0x4000];
+    let mut buffer = [0u8; 0x10_0000];
 
     loop {
         let count = input.read(&mut buffer)?;
