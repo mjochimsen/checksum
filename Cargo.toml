@@ -2,6 +2,7 @@
 name = "checksum"
 version = "0.1.0"
 authors = ["Michael Jochimsen <mlj@troglodytics.org>"]
+build = "build.rs"
 
 [dependencies]
 rust-crypto = "^0.2"
