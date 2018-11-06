@@ -53,7 +53,7 @@ fn run(config: Config) -> Result<(), String> {
                 Digest::RMD160(_) => "RMD160",
             };
 
-            println!("{} ({}): {}", name, filename, digest);
+            println!("{} ({}) = {}", name, filename, digest);
         }
     }
 
