@@ -50,21 +50,18 @@ enum Message {
 
 fn background_md5(rx_input: mpsc::Receiver<Message>,
                   tx_result: mpsc::Sender<[u8; 16]>) {
-    use crypto::digest::Digest as DigestTrait;
-
-    let mut md5 = crypto::md5::Md5::new();
+    let mut ctx = super::super::openssl::MD5_CTX::new();
 
     loop {
         let msg = rx_input.recv();
 
         match msg {
-            Ok(Message::Append(data)) => md5.input(&*data),
+            Ok(Message::Append(data)) => ctx.update(&*data),
             Ok(Message::Finish) => {
-                let mut result = [0u8; 16];
-                md5.result(&mut result);
+                let digest = ctx.result();
 
-                tx_result.send(result).unwrap();
-                md5.reset()
+                tx_result.send(digest).unwrap();
+                ctx.reset();
             },
             Err(_) => break,
         }

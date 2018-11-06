@@ -11,6 +11,7 @@ use std::sync::Arc;
 
 mod config;
 mod digest;
+mod openssl;
 
 use config::Config;
 use digest::*;
