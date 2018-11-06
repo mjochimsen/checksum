@@ -50,21 +50,18 @@ enum Message {
 
 fn background_sha512(rx_input: mpsc::Receiver<Message>,
                      tx_result: mpsc::Sender<[u8; 64]>) {
-    use crypto::digest::Digest as DigestTrait;
-
-    let mut sha512 = crypto::sha2::Sha512::new();
+    let mut ctx = super::super::openssl::SHA512_CTX::new();
 
     loop {
         let msg = rx_input.recv();
 
         match msg {
-            Ok(Message::Append(data)) => sha512.input(&*data),
+            Ok(Message::Append(data)) => ctx.update(&*data),
             Ok(Message::Finish) => {
-                let mut result = [0u8; 64];
-                sha512.result(&mut result);
+                let digest = ctx.result();
 
-                tx_result.send(result).unwrap();
-                sha512.reset()
+                tx_result.send(digest).unwrap();
+                ctx.reset()
             },
             Err(_) => break,
         }

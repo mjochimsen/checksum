@@ -1,4 +1,4 @@
-use libc::{c_void, c_uchar, c_int, c_uint, c_long, size_t};
+use libc::{c_void, c_uchar, c_int, c_uint, c_long, c_longlong, size_t};
 
 // # define MD5_CBLOCK      64
 // # define MD5_LBLOCK      (MD5_CBLOCK/4)
@@ -69,6 +69,48 @@ extern {
                     ctx: *mut SHA256_CTX) -> c_int;
 }
 
+// # define SHA512_DIGEST_LENGTH    64
+// #  define SHA512_CBLOCK   (SHA_LBLOCK*8)
+
+const SHA512_DIGEST_LENGTH: usize = 64;
+const SHA512_CBLOCK: usize = SHA_LBLOCK * 8;
+
+// typedef struct SHA512state_st {
+//     SHA_LONG64 h[8];
+//     SHA_LONG64 Nl, Nh;
+//     union {
+//         SHA_LONG64 d[SHA_LBLOCK];
+//         unsigned char p[SHA512_CBLOCK];
+//     } u;
+//     unsigned int num, md_len;
+// } SHA512_CTX;
+
+#[repr(C)]
+union SHA512_CTX_U {
+    d: [c_longlong; SHA_LBLOCK],
+    p: [c_uchar; SHA512_CBLOCK],
+}
+#[repr(C)]
+pub struct SHA512_CTX {
+    h: [c_longlong; 8],
+    nl: c_longlong, nh: c_longlong,
+    u: SHA512_CTX_U,
+    num: c_uint, md_len: c_uint,
+}
+
+// int SHA512_Init(SHA512_CTX *c);
+// int SHA512_Update(SHA512_CTX *c, const void *data, size_t len);
+// int SHA512_Final(unsigned char *md, SHA512_CTX *c);
+
+#[link(kind = "static", name = "crypto")]
+extern {
+    fn SHA512_Init(ctx: *mut SHA512_CTX) -> c_int;
+    fn SHA512_Update(ctx: *mut SHA512_CTX,
+                     data: *const c_void, len: size_t) -> c_int;
+    fn SHA512_Final(md: *mut [c_uchar; SHA512_DIGEST_LENGTH],
+                    ctx: *mut SHA512_CTX) -> c_int;
+}
+
 fn data_to_void_ptr(data: &[u8]) -> *const c_void {
     data as *const _ as *const c_void
 }
@@ -76,7 +118,7 @@ fn data_to_void_ptr(data: &[u8]) -> *const c_void {
 #[cfg(test)]
 mod c_tests {
     use super::*;
-    use super::super::digest::Digest::{MD5, SHA256};
+    use super::super::digest::Digest::{MD5, SHA256, SHA512};
     use super::super::digest::test_digests::*;
 
     #[test]
@@ -119,6 +161,27 @@ mod c_tests {
         }
 
         assert_eq!(SHA256(digest), SHA256_ZERO_400D);
+    }
+
+    #[test]
+    fn sha512() {
+        let mut ctx = SHA512_CTX {
+            h: [0; 8],
+            nl: 0, nh: 0,
+            u: SHA512_CTX_U { d: [0; SHA_LBLOCK] },
+            num: 0, md_len: 0,
+        };
+        let mut digest = [0u8; SHA512_DIGEST_LENGTH];
+        let data = [0u8; 0x400d];
+        let data_ptr = data_to_void_ptr(&data);
+
+        unsafe {
+            assert_eq!(SHA512_Init(&mut ctx), 1);
+            assert_eq!(SHA512_Update(&mut ctx, data_ptr, 0x400d), 1);
+            assert_eq!(SHA512_Final(&mut digest, &mut ctx), 1);
+        }
+
+        assert_eq!(SHA512(digest), SHA512_ZERO_400D);
     }
 }
 
@@ -180,10 +243,39 @@ impl SHA256_CTX {
     }
 }
 
+impl SHA512_CTX {
+    pub fn new() -> SHA512_CTX {
+        let mut ctx = SHA512_CTX {
+            h: [0; 8],
+            nl: 0, nh: 0,
+            u: SHA512_CTX_U { d: [0; SHA_LBLOCK] },
+            num: 0, md_len: 0,
+        };
+        ctx.reset();
+        ctx
+    }
+
+    pub fn reset(&mut self) {
+        unsafe { SHA512_Init(self) };
+    }
+
+    pub fn update(&mut self, data: &[u8]) {
+        let len = data.len() as size_t;
+        let data_ptr = data_to_void_ptr(&data);
+        unsafe { SHA512_Update(self, data_ptr, len) };
+    }
+
+    pub fn result(&mut self) -> [u8; SHA512_DIGEST_LENGTH] {
+        let mut digest = [0u8; SHA512_DIGEST_LENGTH];
+        unsafe { SHA512_Final(&mut digest, self) };
+        digest
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
-    use super::super::digest::Digest::{MD5, SHA256};
+    use super::super::digest::Digest::{MD5, SHA256, SHA512};
     use super::super::digest::test_digests::*;
 
     #[test]
@@ -236,6 +328,32 @@ mod tests {
         let digest = ctx.result();
 
         assert_eq!(SHA256(digest), SHA256_ZERO_EMPTY);
+    }
+
+    #[test]
+    fn sha512() {
+        let mut ctx = SHA512_CTX::new();
+
+        let digest = ctx.result();
+
+        assert_eq!(SHA512(digest), SHA512_ZERO_EMPTY);
+
+        ctx.reset();
+
+        let data = [0u8; 0x4000];
+        ctx.update(&data);
+        let data = [0u8; 0x0d];
+        ctx.update(&data);
+
+        let digest = ctx.result();
+
+        assert_eq!(SHA512(digest), SHA512_ZERO_400D);
+
+        ctx.reset();
+
+        let digest = ctx.result();
+
+        assert_eq!(SHA512(digest), SHA512_ZERO_EMPTY);
     }
 }
 
