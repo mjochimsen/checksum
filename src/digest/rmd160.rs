@@ -50,21 +50,18 @@ enum Message {
 
 fn background_rmd160(rx_input: mpsc::Receiver<Message>,
                      tx_result: mpsc::Sender<[u8; 20]>) {
-    use crypto::digest::Digest as DigestTrait;
-
-    let mut rmd160 = crypto::ripemd160::Ripemd160::new();
+    let mut ctx = super::super::openssl::RIPEMD160_CTX::new();
 
     loop {
         let msg = rx_input.recv();
 
         match msg {
-            Ok(Message::Append(data)) => rmd160.input(&*data),
+            Ok(Message::Append(data)) => ctx.update(&*data),
             Ok(Message::Finish) => {
-                let mut result = [0u8; 20];
-                rmd160.result(&mut result);
+                let digest = ctx.result();
 
-                tx_result.send(result).unwrap();
-                rmd160.reset()
+                tx_result.send(digest).unwrap();
+                ctx.reset()
             },
             Err(_) => break,
         }

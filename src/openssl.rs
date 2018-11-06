@@ -1,4 +1,4 @@
-use libc::{c_void, c_uchar, c_int, c_uint, c_long, c_longlong, size_t};
+use libc::{c_void, c_uchar, c_int, c_uint, c_ulong, c_ulonglong, size_t};
 
 // # define MD5_CBLOCK      64
 // # define MD5_LBLOCK      (MD5_CBLOCK/4)
@@ -16,9 +16,9 @@ const MD5_DIGEST_LENGTH: usize = 16;
 
 #[repr(C)]
 pub struct MD5_CTX {
-    a: c_long, b: c_long, c: c_long, d: c_long,
-    nl: c_long, nh: c_long,
-    data: [c_long; MD5_LBLOCK],
+    a: c_ulong, b: c_ulong, c: c_ulong, d: c_ulong,
+    nl: c_ulong, nh: c_ulong,
+    data: [c_ulong; MD5_LBLOCK],
     num: c_uint,
 }
 
@@ -50,9 +50,9 @@ const SHA256_DIGEST_LENGTH: usize = 32;
 
 #[repr(C)]
 pub struct SHA256_CTX {
-    h: [c_long; 8],
-    nl: c_long, nh: c_long,
-    data: [c_long; SHA_LBLOCK],
+    h: [c_ulong; 8],
+    nl: c_ulong, nh: c_ulong,
+    data: [c_ulong; SHA_LBLOCK],
     num: c_uint, md_len: c_uint,
 }
 
@@ -87,13 +87,13 @@ const SHA512_CBLOCK: usize = SHA_LBLOCK * 8;
 
 #[repr(C)]
 union SHA512_CTX_U {
-    d: [c_longlong; SHA_LBLOCK],
+    d: [c_ulonglong; SHA_LBLOCK],
     p: [c_uchar; SHA512_CBLOCK],
 }
 #[repr(C)]
 pub struct SHA512_CTX {
-    h: [c_longlong; 8],
-    nl: c_longlong, nh: c_longlong,
+    h: [c_ulonglong; 8],
+    nl: c_ulonglong, nh: c_ulonglong,
     u: SHA512_CTX_U,
     num: c_uint, md_len: c_uint,
 }
@@ -111,6 +111,41 @@ extern {
                     ctx: *mut SHA512_CTX) -> c_int;
 }
 
+// # define RIPEMD160_CBLOCK        64
+// # define RIPEMD160_LBLOCK        (RIPEMD160_CBLOCK/4)
+// # define RIPEMD160_DIGEST_LENGTH 20
+
+const RIPEMD160_LBLOCK: usize = 16;
+const RIPEMD160_DIGEST_LENGTH: usize = 20;
+
+// typedef struct RIPEMD160state_st {
+//     RIPEMD160_LONG A, B, C, D, E;
+//     RIPEMD160_LONG Nl, Nh;
+//     RIPEMD160_LONG data[RIPEMD160_LBLOCK];
+//     unsigned int num;
+// } RIPEMD160_CTX;
+
+#[repr(C)]
+pub struct RIPEMD160_CTX {
+    a: c_ulong, b: c_ulong, c: c_ulong, d: c_ulong, e: c_ulong,
+    nl: c_ulong, nh: c_ulong,
+    data: [c_ulong; RIPEMD160_LBLOCK],
+    num: c_uint,
+}
+
+// int RIPEMD160_Init(RIPEMD160_CTX *c);
+// int RIPEMD160_Update(RIPEMD160_CTX *c, const void *data, size_t len);
+// int RIPEMD160_Final(unsigned char *md, RIPEMD160_CTX *c);
+
+#[link(kind = "static", name = "crypto")]
+extern {
+    fn RIPEMD160_Init(ctx: *mut RIPEMD160_CTX) -> c_int;
+    fn RIPEMD160_Update(ctx: *mut RIPEMD160_CTX,
+                        data: *const c_void, len: size_t) -> c_int;
+    fn RIPEMD160_Final(md: *mut [c_uchar; RIPEMD160_DIGEST_LENGTH],
+                       ctx: *mut RIPEMD160_CTX) -> c_int;
+}
+
 fn data_to_void_ptr(data: &[u8]) -> *const c_void {
     data as *const _ as *const c_void
 }
@@ -118,7 +153,7 @@ fn data_to_void_ptr(data: &[u8]) -> *const c_void {
 #[cfg(test)]
 mod c_tests {
     use super::*;
-    use super::super::digest::Digest::{MD5, SHA256, SHA512};
+    use super::super::digest::Digest::{MD5, SHA256, SHA512, RMD160};
     use super::super::digest::test_digests::*;
 
     #[test]
@@ -183,6 +218,28 @@ mod c_tests {
 
         assert_eq!(SHA512(digest), SHA512_ZERO_400D);
     }
+
+    #[test]
+    fn ripemd160() {
+        let mut ctx = RIPEMD160_CTX {
+            a: 0, b: 0, c: 0, d: 0, e: 0,
+            nl: 0, nh: 0,
+            data: [0; RIPEMD160_LBLOCK],
+            num: 0,
+        };
+        let mut digest = [0u8; RIPEMD160_DIGEST_LENGTH];
+        let data = [0u8; 0x400d];
+        let data_ptr = data_to_void_ptr(&data);
+
+        unsafe {
+            assert_eq!(RIPEMD160_Init(&mut ctx), 1);
+            assert_eq!(RIPEMD160_Update(&mut ctx, data_ptr, 0x400d), 1);
+            assert_eq!(RIPEMD160_Final(&mut digest, &mut ctx), 1);
+        }
+
+        assert_eq!(RMD160(digest), RMD160_ZERO_400D);
+    }
+
 }
 
 impl MD5_CTX {
@@ -272,10 +329,39 @@ impl SHA512_CTX {
     }
 }
 
+impl RIPEMD160_CTX {
+    pub fn new() -> RIPEMD160_CTX {
+        let mut ctx = RIPEMD160_CTX {
+            a: 0, b: 0, c: 0, d: 0, e: 0,
+            nl: 0, nh: 0,
+            data: [0; RIPEMD160_LBLOCK],
+            num: 0
+        };
+        ctx.reset();
+        ctx
+    }
+
+    pub fn reset(&mut self) {
+        unsafe { RIPEMD160_Init(self) };
+    }
+
+    pub fn update(&mut self, data: &[u8]) {
+        let len = data.len() as size_t;
+        let data_ptr = data_to_void_ptr(&data);
+        unsafe { RIPEMD160_Update(self, data_ptr, len) };
+    }
+
+    pub fn result(&mut self) -> [u8; RIPEMD160_DIGEST_LENGTH] {
+        let mut digest = [0u8; RIPEMD160_DIGEST_LENGTH];
+        unsafe { RIPEMD160_Final(&mut digest, self) };
+        digest
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
-    use super::super::digest::Digest::{MD5, SHA256, SHA512};
+    use super::super::digest::Digest::{MD5, SHA256, SHA512, RMD160};
     use super::super::digest::test_digests::*;
 
     #[test]
@@ -354,6 +440,32 @@ mod tests {
         let digest = ctx.result();
 
         assert_eq!(SHA512(digest), SHA512_ZERO_EMPTY);
+    }
+
+    #[test]
+    fn ripemd160() {
+        let mut ctx = RIPEMD160_CTX::new();
+
+        let digest = ctx.result();
+
+        assert_eq!(RMD160(digest), RMD160_ZERO_EMPTY);
+
+        ctx.reset();
+
+        let data = [0u8; 0x4000];
+        ctx.update(&data);
+        let data = [0u8; 0x0d];
+        ctx.update(&data);
+
+        let digest = ctx.result();
+
+        assert_eq!(RMD160(digest), RMD160_ZERO_400D);
+
+        ctx.reset();
+
+        let digest = ctx.result();
+
+        assert_eq!(RMD160(digest), RMD160_ZERO_EMPTY);
     }
 }
 
