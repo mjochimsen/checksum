@@ -5,5 +5,4 @@ authors = ["Michael Jochimsen <mlj@troglodytics.org>"]
 build = "build.rs"
 
 [dependencies]
-rust-crypto = "^0.2"
 libc = "0.2"

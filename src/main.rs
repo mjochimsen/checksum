@@ -1,4 +1,3 @@
-extern crate crypto;
 extern crate libc;
 
 use std::env::args;

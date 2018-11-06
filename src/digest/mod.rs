@@ -1,5 +1,3 @@
-extern crate crypto;
-
 mod crc32;
 mod md5;
 mod sha256;
