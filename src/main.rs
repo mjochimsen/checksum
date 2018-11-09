@@ -16,7 +16,7 @@ use config::Config;
 use digest::*;
 
 fn main() {
-    let config = Config::new(args());
+    let config = Config::new(args()).unwrap();
 
     match run(config) {
         Ok(()) => (),
@@ -31,15 +31,16 @@ fn main() {
 fn run(config: Config) -> Result<(), String> {
     let generators = vec![crc32(), md5(), sha256(), sha512(), rmd160()];
 
-    for filename in config.files {
-        let path = path::Path::new(&filename);
+    for path in config.paths {
+        let path = path.as_path();
+        let pathstr = path.to_str().unwrap();
 
-        let digests = digest_file(path, &generators);
+        let digests = digest_file(&path, &generators);
 
         let digests = match digests {
             Ok(digests) => digests,
             Err(_error) => {
-                let error = format!("unable to process {}", filename);
+                let error = format!("unable to process {}", pathstr);
                 return Err(error);
             }
         };
@@ -53,7 +54,7 @@ fn run(config: Config) -> Result<(), String> {
                 Digest::RMD160(_) => "RMD160",
             };
 
-            println!("{} ({}) = {}", name, filename, digest);
+            println!("{} ({}) = {}", name, pathstr, digest);
         }
     }
 
@@ -95,7 +96,7 @@ mod tests {
 
     #[test]
     fn fake_run() {
-        let config = Config::new(vec!("test/zero-11171", "test/random-11171").iter());
+        let config = Config::new(vec!("checksum", "test/zero-11171", "test/random-11171").iter()).unwrap();
         assert_eq!(run(config), Ok(()));
     }
 
@@ -104,7 +105,7 @@ mod tests {
         let missing = Path::new("test/missing");
         let generators = generators();
 
-        let error = digest_file(missing, &generators).unwrap_err();
+        let error = digest_file(&missing, &generators).unwrap_err();
 
         assert_eq!(error.kind(), io::ErrorKind::NotFound);
     }
@@ -114,7 +115,7 @@ mod tests {
         let empty = Path::new("test/zero-0");
         let generators = generators();
 
-        let digests = digest_file(empty, &generators).unwrap();
+        let digests = digest_file(&empty, &generators).unwrap();
 
         assert_eq!(digests, vec![CRC32_ZERO_EMPTY,
                                  MD5_ZERO_EMPTY,
@@ -125,10 +126,10 @@ mod tests {
 
     #[test]
     fn digest_zero() {
-        let empty = Path::new("test/zero-11171");
+        let zero = Path::new("test/zero-11171");
         let generators = generators();
 
-        let digests = digest_file(empty, &generators).unwrap();
+        let digests = digest_file(&zero, &generators).unwrap();
 
         assert_eq!(digests, vec![CRC32_ZERO_11171,
                                  MD5_ZERO_11171,
@@ -139,10 +140,10 @@ mod tests {
 
     #[test]
     fn digest_random() {
-        let empty = Path::new("test/random-11171");
+        let random = Path::new("test/random-11171");
         let generators = generators();
 
-        let digests = digest_file(empty, &generators).unwrap();
+        let digests = digest_file(&random, &generators).unwrap();
 
         assert_eq!(digests, vec![CRC32_RANDOM_11171,
                                  MD5_RANDOM_11171,
