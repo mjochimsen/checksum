@@ -305,7 +305,7 @@ mod tests {
     fn digest_stdin() {
         let mut child =
             process::Command::new("/bin/cat")
-                             .arg("test/zero-400d")
+                             .arg(test_data("zero-400d"))
                              .stdout(process::Stdio::piped())
                              .spawn()
                              .expect("failed to execute /bin/cat");
@@ -325,7 +325,7 @@ mod tests {
 
     #[test]
     fn digest_empty() {
-        let empty = fs::File::open("test/zero-0").unwrap();
+        let empty = fs::File::open(test_data("zero-0")).unwrap();
         let generators = generators();
 
         let digests = digest_file(empty, &generators).unwrap();
@@ -339,7 +339,7 @@ mod tests {
 
     #[test]
     fn digest_zero() {
-        let zero = fs::File::open("test/zero-11171").unwrap();
+        let zero = fs::File::open(test_data("zero-11171")).unwrap();
         let generators = generators();
 
         let digests = digest_file(zero, &generators).unwrap();
@@ -353,7 +353,7 @@ mod tests {
 
     #[test]
     fn digest_random() {
-        let random = fs::File::open("test/random-11171").unwrap();
+        let random = fs::File::open(test_data("random-11171")).unwrap();
         let generators = generators();
 
         let digests = digest_file(random, &generators).unwrap();
@@ -367,5 +367,10 @@ mod tests {
 
     fn generators() -> Vec<Box<Generator>> {
         vec![crc32(), md5(), sha256(), sha512(), rmd160()]
+    }
+
+    fn test_data(filename: &str) -> path::PathBuf {
+        use std::iter::FromIterator;
+        path::PathBuf::from_iter(&["tests", "data", filename])
     }
 }
