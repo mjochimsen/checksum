@@ -228,38 +228,6 @@ mod tests {
     }
 
     #[test]
-    fn show_help_output() {
-        // TODO: To implement this test we need to capture stdout,
-        // which is not possible at this time.
-        assert_eq!(show_help(), Ok(()));
-    }
-
-    #[test]
-    fn digest_stdin_output() {
-        // TODO: In order to implement this we need to redirect
-        // stdin, which is not possible at this time. We also want
-        // to capture stdout, which is likewise impossible.
-    }
-
-    #[test]
-    fn digest_files_output() {
-        // TODO: To implement this test we need to capture stdout,
-        // which is not possible at this time.
-    }
-
-    #[test]
-    fn print_error_output() {
-        // TODO: To implement this test we need to capture stderr,
-        // which is not possible at this time.
-    }
-
-    #[test]
-    fn print_digest() {
-        // TODO: To implement this test we need to capture stdout,
-        // which is not possible at this time.
-    }
-
-    #[test]
     fn create_generators() {
         let digests = vec![
             config::Digest::MD5,
