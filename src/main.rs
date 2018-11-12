@@ -157,7 +157,7 @@ type DigestResult = Result<Vec<Digest>, io::Error>;
 
 fn digest_file<R: io::Read>(mut input: R,
                             generators: &Generators) -> DigestResult {
-    let mut buffer = [0u8; 0x10_0000];
+    let mut buffer = [0u8; 0x4_0000];
 
     loop {
         let count = input.read(&mut buffer)?;
