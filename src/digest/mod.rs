@@ -97,27 +97,27 @@ pub trait Generator {
     fn result(&self) -> Digest;
 }
 
-pub fn crc32() -> Box<Generator> {
+pub fn crc32() -> Box<dyn Generator> {
     let crc32 = crc32::CRC32::new();
     Box::new(crc32)
 }
 
-pub fn md5() -> Box<Generator> {
+pub fn md5() -> Box<dyn Generator> {
     let md5 = md5::MD5::new();
     Box::new(md5)
 }
 
-pub fn sha256() -> Box<Generator> {
+pub fn sha256() -> Box<dyn Generator> {
     let sha256 = sha256::SHA256::new();
     Box::new(sha256)
 }
 
-pub fn sha512() -> Box<Generator> {
+pub fn sha512() -> Box<dyn Generator> {
     let sha512 = sha512::SHA512::new();
     Box::new(sha512)
 }
 
-pub fn rmd160() -> Box<Generator> {
+pub fn rmd160() -> Box<dyn Generator> {
     let rmd160 = rmd160::RMD160::new();
     Box::new(rmd160)
 }

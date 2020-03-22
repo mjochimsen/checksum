@@ -138,7 +138,7 @@ fn print_digest(digest: Digest, path: Option<&path::Path>) {
     };
 }
 
-type Generators = Vec<Box<Generator>>;
+type Generators = Vec<Box<dyn Generator>>;
 
 fn create_generators(digests: &Vec<config::Digest>) -> Generators {
     digests.iter().map(|digest| {
@@ -175,7 +175,7 @@ fn digest_file<R: io::Read>(mut input: R,
     Ok(digests)
 }
 
-fn update_digests(generators: &Vec<Box<Generator>>, data: &[u8]) {
+fn update_digests(generators: &Vec<Box<dyn Generator>>, data: &[u8]) {
     let data: std::sync::Arc<[u8]> = std::sync::Arc::from(data);
     for generator in generators.iter() {
         generator.append(data.clone());
@@ -333,7 +333,7 @@ mod tests {
                                  RMD160_RANDOM_11171]);
     }
 
-    fn generators() -> Vec<Box<Generator>> {
+    fn generators() -> Vec<Box<dyn Generator>> {
         vec![crc32(), md5(), sha256(), sha512(), rmd160()]
     }
 
