@@ -2,23 +2,25 @@ use std::path;
 use std::process;
 
 fn main() {
-    match openssl_path() {
-        Some(path) => {
-            println!("cargo:rustc-link-search={}", &path.display());
-        }
-        None => {
-            eprintln!("{}", "Unable to locate static OpenSSL library");
-            process::exit(1)
-        }
+    if let Some(path) = openssl_path() {
+        println!("cargo:rustc-link-search={}", &path.display());
     }
 }
 
 fn openssl_path() -> Option<path::PathBuf> {
-    // Find the first entry in the list of library paths containing
-    // the OpenSSL libs.
-    for path in openssl_lib_paths() {
-        if has_openssl_lib(&path) {
-            return Some(path);
+    // Unixish operating systems will generally provide a correct path,
+    // but MacOS may have the OpenSSL libs in the HomeBrew path, which
+    // will need to be added.
+    // We don't know how Windows should be handled.
+    if cfg!(target_os = "macos") {
+        if let Some(brew_prefix) = brew_prefix() {
+            let openssl_brew_lib = brew_prefix
+                .join("opt")
+                .join("openssl")
+                .join("lib");
+            if has_openssl_lib(&openssl_brew_lib) {
+                return Some(openssl_brew_lib);
+            }
         }
     }
     None
@@ -38,37 +40,6 @@ fn has_openssl_lib(lib_path: &path::PathBuf) -> bool {
             }
         }
         Err(_) => false
-    }
-}
-
-fn openssl_lib_paths() -> Vec<path::PathBuf> {
-    if cfg!(unix) {
-        // On Unix OpenSSL is generally in /opt/local/lib, /usr/local/lib,
-        // /opt/lib, /usr/lib, or /lib. We'll search them in this order.
-        let mut paths = vec![
-            path::PathBuf::from("/opt/local/lib"),
-            path::PathBuf::from("/usr/local/lib"),
-            path::PathBuf::from("/opt/lib"),
-            path::PathBuf::from("/usr/lib"),
-            path::PathBuf::from("/lib"),
-        ];
-        if cfg!(target_os = "macos") {
-            // If we're on MacOS, check for a Homebrew install, and
-            // prefix it to the list of possible paths if we find it.
-            if let Some(brew_prefix) = brew_prefix() {
-                let openssl_brew_lib = brew_prefix
-                    .join("opt")
-                    .join("openssl")
-                    .join("lib");
-
-                paths.insert(0, openssl_brew_lib);
-            }
-        }
-        paths
-    } else {
-        // Location of OpenSSL on Windows or any other OS family is
-        // unknown.
-        vec![]
     }
 }
 
