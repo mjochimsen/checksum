@@ -22,19 +22,6 @@ pub struct MD5_CTX {
     num: c_uint,
 }
 
-// int MD5_Init(MD5_CTX *c);
-// int MD5_Update(MD5_CTX *c, const void *data, size_t len);
-// int MD5_Final(unsigned char *md, MD5_CTX *c);
-
-#[link(kind = "static", name = "crypto")]
-extern {
-    fn MD5_Init(ctx: *mut MD5_CTX) -> c_int;
-    fn MD5_Update(ctx: *mut MD5_CTX,
-                  data: *const c_void, len: size_t) -> c_int;
-    fn MD5_Final(md: *mut [c_uchar; MD5_DIGEST_LENGTH],
-                 ctx: *mut MD5_CTX) -> c_int;
-}
-
 // # define SHA_LBLOCK      16
 // # define SHA256_DIGEST_LENGTH    32
 
@@ -54,19 +41,6 @@ pub struct SHA256_CTX {
     nl: c_ulong, nh: c_ulong,
     data: [c_ulong; SHA_LBLOCK],
     num: c_uint, md_len: c_uint,
-}
-
-// int SHA256_Init(SHA256_CTX *c);
-// int SHA256_Update(SHA256_CTX *c, const void *data, size_t len);
-// int SHA256_Final(unsigned char *md, SHA256_CTX *c);
-
-#[link(kind = "static", name = "crypto")]
-extern {
-    fn SHA256_Init(ctx: *mut SHA256_CTX) -> c_int;
-    fn SHA256_Update(ctx: *mut SHA256_CTX,
-                     data: *const c_void, len: size_t) -> c_int;
-    fn SHA256_Final(md: *mut [c_uchar; SHA256_DIGEST_LENGTH],
-                    ctx: *mut SHA256_CTX) -> c_int;
 }
 
 // # define SHA512_DIGEST_LENGTH    64
@@ -98,19 +72,6 @@ pub struct SHA512_CTX {
     num: c_uint, md_len: c_uint,
 }
 
-// int SHA512_Init(SHA512_CTX *c);
-// int SHA512_Update(SHA512_CTX *c, const void *data, size_t len);
-// int SHA512_Final(unsigned char *md, SHA512_CTX *c);
-
-#[link(kind = "static", name = "crypto")]
-extern {
-    fn SHA512_Init(ctx: *mut SHA512_CTX) -> c_int;
-    fn SHA512_Update(ctx: *mut SHA512_CTX,
-                     data: *const c_void, len: size_t) -> c_int;
-    fn SHA512_Final(md: *mut [c_uchar; SHA512_DIGEST_LENGTH],
-                    ctx: *mut SHA512_CTX) -> c_int;
-}
-
 // # define RIPEMD160_CBLOCK        64
 // # define RIPEMD160_LBLOCK        (RIPEMD160_CBLOCK/4)
 // # define RIPEMD160_DIGEST_LENGTH 20
@@ -133,12 +94,42 @@ pub struct RIPEMD160_CTX {
     num: c_uint,
 }
 
+// int MD5_Init(MD5_CTX *c);
+// int MD5_Update(MD5_CTX *c, const void *data, size_t len);
+// int MD5_Final(unsigned char *md, MD5_CTX *c);
+//
+// int SHA256_Init(SHA256_CTX *c);
+// int SHA256_Update(SHA256_CTX *c, const void *data, size_t len);
+// int SHA256_Final(unsigned char *md, SHA256_CTX *c);
+//
+// int SHA512_Init(SHA512_CTX *c);
+// int SHA512_Update(SHA512_CTX *c, const void *data, size_t len);
+// int SHA512_Final(unsigned char *md, SHA512_CTX *c);
+//
 // int RIPEMD160_Init(RIPEMD160_CTX *c);
 // int RIPEMD160_Update(RIPEMD160_CTX *c, const void *data, size_t len);
 // int RIPEMD160_Final(unsigned char *md, RIPEMD160_CTX *c);
 
 #[link(kind = "static", name = "crypto")]
 extern {
+    fn MD5_Init(ctx: *mut MD5_CTX) -> c_int;
+    fn MD5_Update(ctx: *mut MD5_CTX,
+                  data: *const c_void, len: size_t) -> c_int;
+    fn MD5_Final(md: *mut [c_uchar; MD5_DIGEST_LENGTH],
+                 ctx: *mut MD5_CTX) -> c_int;
+
+    fn SHA256_Init(ctx: *mut SHA256_CTX) -> c_int;
+    fn SHA256_Update(ctx: *mut SHA256_CTX,
+                     data: *const c_void, len: size_t) -> c_int;
+    fn SHA256_Final(md: *mut [c_uchar; SHA256_DIGEST_LENGTH],
+                    ctx: *mut SHA256_CTX) -> c_int;
+
+    fn SHA512_Init(ctx: *mut SHA512_CTX) -> c_int;
+    fn SHA512_Update(ctx: *mut SHA512_CTX,
+                     data: *const c_void, len: size_t) -> c_int;
+    fn SHA512_Final(md: *mut [c_uchar; SHA512_DIGEST_LENGTH],
+                    ctx: *mut SHA512_CTX) -> c_int;
+
     fn RIPEMD160_Init(ctx: *mut RIPEMD160_CTX) -> c_int;
     fn RIPEMD160_Update(ctx: *mut RIPEMD160_CTX,
                         data: *const c_void, len: size_t) -> c_int;
