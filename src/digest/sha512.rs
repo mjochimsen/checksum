@@ -82,6 +82,7 @@ mod tests {
     use super::super::test_digests::*;
     use super::*;
 
+    #[ignore]
     #[test]
     fn sha512_empty() {
         let sha512 = SHA512::new();
@@ -91,6 +92,7 @@ mod tests {
         assert_eq!(digest, SHA512_ZERO_EMPTY);
     }
 
+    #[ignore]
     #[test]
     fn sha512_data() {
         let sha512 = SHA512::new();
@@ -105,6 +107,7 @@ mod tests {
         assert_eq!(digest, SHA512_ZERO_400D);
     }
 
+    #[ignore]
     #[test]
     fn sha512_multiple() {
         let sha512 = SHA512::new();

@@ -29,6 +29,7 @@ fn checksum_help() {
     assert!(lines.is_empty());
 }
 
+#[ignore]
 #[test]
 fn checksum_stdin() {
     let mut child = run_checksum(&["--rmd160", "--md5", "--crc32"], &[]);
@@ -57,6 +58,7 @@ fn checksum_stdin() {
     assert!(lines.is_empty());
 }
 
+#[ignore]
 #[test]
 fn checksum_files() {
     let mut child = run_checksum(
@@ -141,6 +143,7 @@ fn checksum_missing_file() {
     assert!(lines[0].contains("missing"));
 }
 
+#[ignore]
 #[test]
 fn checksum_missing_and_present_files() {
     let mut child = run_checksum(

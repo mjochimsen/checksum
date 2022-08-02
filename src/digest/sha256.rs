@@ -82,6 +82,7 @@ mod tests {
     use super::super::test_digests::*;
     use super::*;
 
+    #[ignore]
     #[test]
     fn sha256_empty() {
         let sha256 = SHA256::new();
@@ -91,6 +92,7 @@ mod tests {
         assert_eq!(digest, SHA256_ZERO_EMPTY);
     }
 
+    #[ignore]
     #[test]
     fn sha256_data() {
         let sha256 = SHA256::new();
@@ -105,6 +107,7 @@ mod tests {
         assert_eq!(digest, SHA256_ZERO_400D);
     }
 
+    #[ignore]
     #[test]
     fn sha256_multiple() {
         let sha256 = SHA256::new();

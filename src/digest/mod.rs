@@ -239,6 +239,7 @@ mod tests {
         assert_eq!(digest, CRC32_ZERO_EMPTY);
     }
 
+    #[ignore]
     #[test]
     fn md5_generator() {
         let md5 = md5();
@@ -246,6 +247,7 @@ mod tests {
         assert_eq!(digest, MD5_ZERO_EMPTY);
     }
 
+    #[ignore]
     #[test]
     fn sha256_generator() {
         let sha256 = sha256();
@@ -253,6 +255,7 @@ mod tests {
         assert_eq!(digest, SHA256_ZERO_EMPTY);
     }
 
+    #[ignore]
     #[test]
     fn sha512_generator() {
         let sha512 = sha512();
@@ -260,6 +263,7 @@ mod tests {
         assert_eq!(digest, SHA512_ZERO_EMPTY);
     }
 
+    #[ignore]
     #[test]
     fn rmd160_generator() {
         let rmd160 = rmd160();

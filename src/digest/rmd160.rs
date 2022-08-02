@@ -82,6 +82,7 @@ mod tests {
     use super::super::test_digests::*;
     use super::*;
 
+    #[ignore]
     #[test]
     fn rmd160_empty() {
         let rmd160 = RMD160::new();
@@ -91,6 +92,7 @@ mod tests {
         assert_eq!(digest, RMD160_ZERO_EMPTY);
     }
 
+    #[ignore]
     #[test]
     fn rmd160_data() {
         let rmd160 = RMD160::new();
@@ -105,6 +107,7 @@ mod tests {
         assert_eq!(digest, RMD160_ZERO_400D);
     }
 
+    #[ignore]
     #[test]
     fn rmd160_multiple() {
         let rmd160 = RMD160::new();

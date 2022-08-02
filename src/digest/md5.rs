@@ -82,6 +82,7 @@ mod tests {
     use super::super::test_digests::*;
     use super::*;
 
+    #[ignore]
     #[test]
     fn md5_empty() {
         let md5 = MD5::new();
@@ -91,6 +92,7 @@ mod tests {
         assert_eq!(digest, MD5_ZERO_EMPTY);
     }
 
+    #[ignore]
     #[test]
     fn md5_data() {
         let md5 = MD5::new();
@@ -105,6 +107,7 @@ mod tests {
         assert_eq!(digest, MD5_ZERO_400D);
     }
 
+    #[ignore]
     #[test]
     fn md5_multiple() {
         let md5 = MD5::new();
