@@ -1,7 +1,7 @@
 use std::sync::mpsc;
 use std::sync::Arc;
 
-use digest::{Digest, Generator};
+use crate::digest::{Digest, Generator};
 
 pub struct CRC32 {
     tx_input: mpsc::SyncSender<Message>,

@@ -93,7 +93,7 @@ fn format_bytes(f: &mut fmt::Formatter, bytes: &[u8]) -> fmt::Result {
 }
 
 pub trait Generator {
-    fn append(&self, Arc<[u8]>);
+    fn append(&self, data: Arc<[u8]>);
     fn result(&self) -> Digest;
 }
 

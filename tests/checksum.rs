@@ -164,7 +164,6 @@ fn checksum_missing_and_present_files() {
 }
 
 fn run_checksum(flags: &[&str], files: &[&str]) -> process::Child {
-    use std::iter::FromIterator;
     let checksum_path =
         path::PathBuf::from_iter(&["target", "debug", "checksum"]);
     let mut cmd = process::Command::new(&checksum_path);

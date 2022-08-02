@@ -338,7 +338,6 @@ mod tests {
     }
 
     fn test_data(filename: &str) -> path::PathBuf {
-        use std::iter::FromIterator;
         path::PathBuf::from_iter(&["tests", "data", filename])
     }
 }

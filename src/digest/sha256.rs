@@ -1,7 +1,7 @@
 use std::sync::mpsc;
 use std::sync::Arc;
 
-use digest::{Digest, Generator};
+use crate::digest::{Digest, Generator};
 
 pub struct SHA256 {
     tx_input: mpsc::SyncSender<Message>,
