@@ -174,12 +174,10 @@ impl Argument {
             Argument::Digest(Digest::SHA512)
         } else if arg == "--rmd160" {
             Argument::Digest(Digest::RMD160)
+        } else if arg.starts_with('-') {
+            Argument::Error(arg.clone())
         } else {
-            if arg.starts_with("-") {
-                Argument::Error(arg.clone())
-            } else {
-                Argument::Filename(arg.clone())
-            }
+            Argument::Filename(arg.clone())
         }
     }
 }

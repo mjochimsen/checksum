@@ -27,9 +27,8 @@ fn main() {
         Action::DigestFiles(digests, paths) => digest_files(digests, paths),
     };
 
-    match result {
-        Ok(_) => return,
-        Err(_) => std::process::exit(1),
+    if result.is_err() {
+        std::process::exit(1);
     }
 }
 
@@ -143,7 +142,7 @@ fn print_digest(digest: Digest, path: Option<&path::Path>) {
 
 type Generators = Vec<Box<dyn Generator>>;
 
-fn create_generators(digests: &Vec<config::Digest>) -> Generators {
+fn create_generators(digests: &[config::Digest]) -> Generators {
     digests
         .iter()
         .map(|digest| match digest {
@@ -181,7 +180,7 @@ fn digest_file<R: io::Read>(
     Ok(digests)
 }
 
-fn update_digests(generators: &Vec<Box<dyn Generator>>, data: &[u8]) {
+fn update_digests(generators: &[Box<dyn Generator>], data: &[u8]) {
     let data: std::sync::Arc<[u8]> = std::sync::Arc::from(data);
     for generator in generators.iter() {
         generator.append(data.clone());

@@ -345,7 +345,7 @@ impl MD5_CTX {
 
     pub fn update(&mut self, data: &[u8]) {
         let len = data.len() as size_t;
-        let data_ptr = data_to_void_ptr(&data);
+        let data_ptr = data_to_void_ptr(data);
         unsafe { MD5_Update(self, data_ptr, len) };
     }
 
@@ -376,7 +376,7 @@ impl SHA256_CTX {
 
     pub fn update(&mut self, data: &[u8]) {
         let len = data.len() as size_t;
-        let data_ptr = data_to_void_ptr(&data);
+        let data_ptr = data_to_void_ptr(data);
         unsafe { SHA256_Update(self, data_ptr, len) };
     }
 
@@ -407,7 +407,7 @@ impl SHA512_CTX {
 
     pub fn update(&mut self, data: &[u8]) {
         let len = data.len() as size_t;
-        let data_ptr = data_to_void_ptr(&data);
+        let data_ptr = data_to_void_ptr(data);
         unsafe { SHA512_Update(self, data_ptr, len) };
     }
 
@@ -441,7 +441,7 @@ impl RIPEMD160_CTX {
 
     pub fn update(&mut self, data: &[u8]) {
         let len = data.len() as size_t;
-        let data_ptr = data_to_void_ptr(&data);
+        let data_ptr = data_to_void_ptr(data);
         unsafe { RIPEMD160_Update(self, data_ptr, len) };
     }
 

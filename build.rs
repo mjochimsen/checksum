@@ -29,13 +29,7 @@ fn has_openssl_lib(lib_path: &path::PathBuf) -> bool {
     let crypto_path = path::PathBuf::from(lib_path).join("libcrypto.a");
 
     match std::fs::metadata(&crypto_path) {
-        Ok(metadata) => {
-            if metadata.is_file() {
-                true
-            } else {
-                false
-            }
-        }
+        Ok(metadata) => metadata.is_file(),
         Err(_) => false,
     }
 }
