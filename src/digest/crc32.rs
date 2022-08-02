@@ -2,6 +2,7 @@ use std::sync::mpsc;
 use std::sync::Arc;
 
 use crate::digest::{Digest, Generator};
+use libz_sys::crc32;
 
 pub struct CRC32 {
     tx_input: mpsc::SyncSender<Message>,
@@ -55,11 +56,6 @@ enum Message {
     Finish,
 }
 
-#[link(name = "z")]
-extern "C" {
-    fn crc32(crc: u32, buf: *const u8, len: u32) -> u32;
-}
-
 fn background_crc32(
     rx_input: mpsc::Receiver<Message>,
     tx_result: mpsc::Sender<u32>,
@@ -71,8 +67,15 @@ fn background_crc32(
 
         match msg {
             Ok(Message::Append(data)) => {
-                let len = data.len() as u32;
-                crc = unsafe { crc32(crc, data.as_ptr(), len) };
+                let len = data
+                    .len()
+                    .try_into()
+                    .expect("data block is too large for CRC32 processing");
+                let crc_sys =
+                    unsafe { crc32(crc.into(), data.as_ptr(), len) };
+                crc = crc_sys
+                    .try_into()
+                    .expect("unexpected CRC32 value > u32::MAX");
             }
             Ok(Message::Finish) => {
                 tx_result.send(crc).unwrap();

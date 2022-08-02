@@ -1,9 +1,10 @@
 [package]
 name = "checksum"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Michael Jochimsen <mlj@troglodytics.org>"]
 build = "build.rs"
 edition = "2021"
 
 [dependencies]
+libz-sys = "1.1"
 libc = "0.2"
