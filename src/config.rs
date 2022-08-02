@@ -1,5 +1,5 @@
-use std::path;
 use std::fmt;
+use std::path;
 
 #[derive(Clone, PartialEq, Debug)]
 pub struct Config {
@@ -59,12 +59,11 @@ Using the '--help' or '-h' option will print this text.
 "#
     }
 
-    pub fn new<T: Iterator<Item = impl ToString>>(args: T) ->
-        Result<Config, Error> {
-
+    pub fn new<T: Iterator<Item = impl ToString>>(
+        args: T,
+    ) -> Result<Config, Error> {
         // Collect the arguments into a vector of strings.
-        let mut args: Vec<String> = args.map(|arg| arg.to_string())
-                                        .collect();
+        let mut args: Vec<String> = args.map(|arg| arg.to_string()).collect();
 
         // Pull the fist argument. This is the command name.
         let cmd: String = args.remove(0);
@@ -80,9 +79,10 @@ Using the '--help' or '-h' option will print this text.
             let arg = Argument::parse(arg);
 
             match arg {
-                Argument::Help =>
+                Argument::Help => {
                     // Set the help flag.
-                    help = true,
+                    help = true
+                }
                 Argument::Digest(digest) => {
                     // Add the digest to list of digests. We don't
                     // permit the same digest to appear more than
@@ -100,21 +100,31 @@ Using the '--help' or '-h' option will print this text.
                     let path = path::PathBuf::from(filename);
                     paths.push(path);
                 }
-                Argument::Error(error) =>
+                Argument::Error(error) => {
                     // If we encounter an error parsing the argument
                     // return an InvalidOption error.
-                    return Err(Error::InvalidOption(error)),
+                    return Err(Error::InvalidOption(error));
+                }
             }
         }
 
         // If no digests were set, use a default set of MD5, SHA256,
         // SHA512, and RMD160.
         if digests.is_empty() && !help {
-            digests = vec![Digest::MD5, Digest::SHA256,
-                           Digest::SHA512, Digest::RMD160];
+            digests = vec![
+                Digest::MD5,
+                Digest::SHA256,
+                Digest::SHA512,
+                Digest::RMD160,
+            ];
         }
 
-        Ok(Config { cmd, help, digests, paths })
+        Ok(Config {
+            cmd,
+            help,
+            digests,
+            paths,
+        })
     }
 
     pub fn use_stdin(&self) -> bool {
@@ -125,8 +135,9 @@ Using the '--help' or '-h' option will print this text.
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Error::InvalidOption(option) =>
-                write!(f, "invalid option '{}'", option),
+            Error::InvalidOption(option) => {
+                write!(f, "invalid option '{}'", option)
+            }
             Error::DuplicateDigest(digest) => {
                 let digest_option = match digest {
                     Digest::CRC32 => "--crc32",
@@ -180,38 +191,52 @@ mod tests {
     #[test]
     fn parse_argument() {
         let help_arg = String::from("--help");
-        assert_eq!(Argument::parse(&help_arg),
-                   Argument::Help);
+        assert_eq!(Argument::parse(&help_arg), Argument::Help);
         let help_arg = String::from("-h");
-        assert_eq!(Argument::parse(&help_arg),
-                   Argument::Help);
+        assert_eq!(Argument::parse(&help_arg), Argument::Help);
 
         let digest_arg = String::from("--crc32");
-        assert_eq!(Argument::parse(&digest_arg),
-                   Argument::Digest(Digest::CRC32));
+        assert_eq!(
+            Argument::parse(&digest_arg),
+            Argument::Digest(Digest::CRC32)
+        );
         let digest_arg = String::from("--md5");
-        assert_eq!(Argument::parse(&digest_arg),
-                   Argument::Digest(Digest::MD5));
+        assert_eq!(
+            Argument::parse(&digest_arg),
+            Argument::Digest(Digest::MD5)
+        );
         let digest_arg = String::from("--sha256");
-        assert_eq!(Argument::parse(&digest_arg),
-                   Argument::Digest(Digest::SHA256));
+        assert_eq!(
+            Argument::parse(&digest_arg),
+            Argument::Digest(Digest::SHA256)
+        );
         let digest_arg = String::from("--sha512");
-        assert_eq!(Argument::parse(&digest_arg),
-                   Argument::Digest(Digest::SHA512));
+        assert_eq!(
+            Argument::parse(&digest_arg),
+            Argument::Digest(Digest::SHA512)
+        );
         let digest_arg = String::from("--rmd160");
-        assert_eq!(Argument::parse(&digest_arg),
-                   Argument::Digest(Digest::RMD160));
+        assert_eq!(
+            Argument::parse(&digest_arg),
+            Argument::Digest(Digest::RMD160)
+        );
 
         let filename_arg = String::from("foo");
-        assert_eq!(Argument::parse(&filename_arg),
-                   Argument::Filename("foo".to_string()));
+        assert_eq!(
+            Argument::parse(&filename_arg),
+            Argument::Filename("foo".to_string())
+        );
 
         let error_arg = String::from("-q");
-        assert_eq!(Argument::parse(&error_arg),
-                   Argument::Error("-q".to_string()));
+        assert_eq!(
+            Argument::parse(&error_arg),
+            Argument::Error("-q".to_string())
+        );
         let error_arg = String::from("--foo");
-        assert_eq!(Argument::parse(&error_arg),
-                   Argument::Error("--foo".to_string()));
+        assert_eq!(
+            Argument::parse(&error_arg),
+            Argument::Error("--foo".to_string())
+        );
     }
 
     #[test]
@@ -229,8 +254,10 @@ mod tests {
 
     #[test]
     fn parse_digests_cli() {
-        let cli = vec!["checksum", "--crc32", "--md5",
-                       "--sha256", "--sha512", "--rmd160"];
+        let cli = vec![
+            "checksum", "--crc32", "--md5", "--sha256", "--sha512",
+            "--rmd160",
+        ];
         let config = Config::new(cli.iter());
         assert!(config.is_ok());
         let config = config.unwrap();
@@ -238,9 +265,16 @@ mod tests {
         assert_eq!(config.cmd, "checksum");
         assert_eq!(config.help, false);
         assert_eq!(config.paths.len(), 0);
-        assert_eq!(config.digests,
-                   vec![Digest::CRC32, Digest::MD5, Digest::SHA256,
-                        Digest::SHA512, Digest::RMD160]);
+        assert_eq!(
+            config.digests,
+            vec![
+                Digest::CRC32,
+                Digest::MD5,
+                Digest::SHA256,
+                Digest::SHA512,
+                Digest::RMD160
+            ]
+        );
     }
 
     #[test]
@@ -253,9 +287,10 @@ mod tests {
         assert_eq!(config.cmd, "checksum");
         assert_eq!(config.help, false);
         assert_eq!(config.paths.len(), 0);
-        assert_eq!(config.digests,
-                   vec![Digest::MD5, Digest::SHA256,
-                        Digest::SHA512, Digest::RMD160]);
+        assert_eq!(
+            config.digests,
+            vec![Digest::MD5, Digest::SHA256, Digest::SHA512, Digest::RMD160]
+        );
     }
 
     #[test]
@@ -267,12 +302,14 @@ mod tests {
 
         assert_eq!(config.cmd, "checksum");
         assert_eq!(config.help, false);
-        assert_eq!(config.digests,
-                   vec![Digest::MD5, Digest::SHA256,
-                        Digest::SHA512, Digest::RMD160]);
-        assert_eq!(config.paths,
-                   vec![path::PathBuf::from("some"),
-                        path::PathBuf::from("files")]);
+        assert_eq!(
+            config.digests,
+            vec![Digest::MD5, Digest::SHA256, Digest::SHA512, Digest::RMD160]
+        );
+        assert_eq!(
+            config.paths,
+            vec![path::PathBuf::from("some"), path::PathBuf::from("files")]
+        );
     }
 
     #[test]

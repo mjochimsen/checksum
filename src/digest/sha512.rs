@@ -19,24 +19,31 @@ impl SHA512 {
             background_sha512(rx_input, tx_result);
         });
 
-        SHA512 { tx_input, rx_result }
+        SHA512 {
+            tx_input,
+            rx_result,
+        }
     }
 }
 
 impl Generator for SHA512 {
     fn append(&self, data: Arc<[u8]>) {
-        self.tx_input.send(Message::Append(data))
+        self.tx_input
+            .send(Message::Append(data))
             .expect("unexpected error appending to digest");
     }
 
     fn result(&self) -> Digest {
         use std::time::Duration;
 
-        self.tx_input.send(Message::Finish)
+        self.tx_input
+            .send(Message::Finish)
             .expect("unexpected error finishing digest");
 
         let timeout = Duration::new(5, 0);
-        let result = self.rx_result.recv_timeout(timeout)
+        let result = self
+            .rx_result
+            .recv_timeout(timeout)
             .expect("unable to retrieve digest value");
 
         Digest::SHA512(result)
@@ -48,8 +55,10 @@ enum Message {
     Finish,
 }
 
-fn background_sha512(rx_input: mpsc::Receiver<Message>,
-                     tx_result: mpsc::Sender<[u8; 64]>) {
+fn background_sha512(
+    rx_input: mpsc::Receiver<Message>,
+    tx_result: mpsc::Sender<[u8; 64]>,
+) {
     let mut ctx = super::super::openssl::SHA512_CTX::new();
 
     loop {
@@ -62,7 +71,7 @@ fn background_sha512(rx_input: mpsc::Receiver<Message>,
 
                 tx_result.send(digest).unwrap();
                 ctx.reset()
-            },
+            }
             Err(_) => break,
         }
     }
@@ -70,8 +79,8 @@ fn background_sha512(rx_input: mpsc::Receiver<Message>,
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use super::super::test_digests::*;
+    use super::*;
 
     #[test]
     fn sha512_empty() {
@@ -118,4 +127,3 @@ mod tests {
         assert_eq!(digest, SHA512_ZERO_EMPTY);
     }
 }
-

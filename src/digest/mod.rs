@@ -1,8 +1,8 @@
 mod crc32;
 mod md5;
+mod rmd160;
 mod sha256;
 mod sha512;
-mod rmd160;
 
 use std::sync::Arc;
 
@@ -17,17 +17,13 @@ pub enum Digest {
 impl PartialEq for Digest {
     fn eq(&self, other: &Digest) -> bool {
         match (self, other) {
-            (Digest::CRC32(left), Digest::CRC32(right)) =>
-                left == right,
-            (Digest::MD5(left), Digest::MD5(right)) =>
-                left == right,
-            (Digest::SHA256(left), Digest::SHA256(right)) =>
-                left == right,
-            (Digest::SHA512(left), Digest::SHA512(right)) =>
-                left[..31] == right[..31] &&
-                left[32..] == right[32..],
-            (Digest::RMD160(left), Digest::RMD160(right)) =>
-                left == right,
+            (Digest::CRC32(left), Digest::CRC32(right)) => left == right,
+            (Digest::MD5(left), Digest::MD5(right)) => left == right,
+            (Digest::SHA256(left), Digest::SHA256(right)) => left == right,
+            (Digest::SHA512(left), Digest::SHA512(right)) => {
+                left[..31] == right[..31] && left[32..] == right[32..]
+            }
+            (Digest::RMD160(left), Digest::RMD160(right)) => left == right,
             _ => false,
         }
     }
@@ -127,8 +123,8 @@ pub mod test_digests;
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use super::test_digests::*;
+    use super::*;
 
     #[test]
     fn crc32_eq() {
@@ -198,30 +194,42 @@ mod tests {
 
     #[test]
     fn md5_format() {
-        assert_eq!(format!("{}", MD5_ZERO_EMPTY),
-                   "d41d8cd98f00b204e9800998ecf8427e");
+        assert_eq!(
+            format!("{}", MD5_ZERO_EMPTY),
+            "d41d8cd98f00b204e9800998ecf8427e"
+        );
     }
 
     #[test]
     fn sha256_format() {
-        assert_eq!(format!("{}", SHA256_ZERO_EMPTY),
-                   concat!("e3b0c44298fc1c149afbf4c8996fb924",
-                           "27ae41e4649b934ca495991b7852b855"));
+        assert_eq!(
+            format!("{}", SHA256_ZERO_EMPTY),
+            concat!(
+                "e3b0c44298fc1c149afbf4c8996fb924",
+                "27ae41e4649b934ca495991b7852b855"
+            )
+        );
     }
 
     #[test]
     fn sha512_format() {
-        assert_eq!(format!("{}", SHA512_ZERO_EMPTY),
-                   concat!("cf83e1357eefb8bdf1542850d66d8007",
-                           "d620e4050b5715dc83f4a921d36ce9ce",
-                           "47d0d13c5d85f2b0ff8318d2877eec2f",
-                           "63b931bd47417a81a538327af927da3e"));
+        assert_eq!(
+            format!("{}", SHA512_ZERO_EMPTY),
+            concat!(
+                "cf83e1357eefb8bdf1542850d66d8007",
+                "d620e4050b5715dc83f4a921d36ce9ce",
+                "47d0d13c5d85f2b0ff8318d2877eec2f",
+                "63b931bd47417a81a538327af927da3e"
+            )
+        );
     }
 
     #[test]
     fn rmd160_format() {
-        assert_eq!(format!("{}", RMD160_ZERO_EMPTY),
-                   "9c1185a5c5e9fc54612808977ee8f548b2258d31");
+        assert_eq!(
+            format!("{}", RMD160_ZERO_EMPTY),
+            "9c1185a5c5e9fc54612808977ee8f548b2258d31"
+        );
     }
 
     #[test]

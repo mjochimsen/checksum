@@ -1,9 +1,9 @@
 extern crate libc;
 
+use std::fmt;
 use std::fs;
 use std::io;
 use std::path;
-use std::fmt;
 
 mod config;
 mod digest;
@@ -22,12 +22,9 @@ fn main() {
     };
 
     let result = match choose_action(config) {
-        Action::ShowHelp =>
-            show_help(),
-        Action::DigestStdin(digests) =>
-            digest_stdin(digests),
-        Action::DigestFiles(digests, paths) =>
-            digest_files(digests, paths),
+        Action::ShowHelp => show_help(),
+        Action::DigestStdin(digests) => digest_stdin(digests),
+        Action::DigestFiles(digests, paths) => digest_files(digests, paths),
     };
 
     match result {
@@ -73,8 +70,10 @@ fn digest_stdin(digests: Vec<config::Digest>) -> Result<(), ()> {
     Ok(())
 }
 
-fn digest_files(digests: Vec<config::Digest>,
-                paths: Vec<path::PathBuf>) -> Result<(), ()> {
+fn digest_files(
+    digests: Vec<config::Digest>,
+    paths: Vec<path::PathBuf>,
+) -> Result<(), ()> {
     // Create the generators based on the digests listed in the config.
     let generators = create_generators(&digests);
     let mut error = false;
@@ -98,7 +97,11 @@ fn digest_files(digests: Vec<config::Digest>,
         }
     }
 
-    if error { Err(()) } else { Ok(()) }
+    if error {
+        Err(())
+    } else {
+        Ok(())
+    }
 }
 
 #[derive(Clone, PartialEq, Debug)]
@@ -141,22 +144,24 @@ fn print_digest(digest: Digest, path: Option<&path::Path>) {
 type Generators = Vec<Box<dyn Generator>>;
 
 fn create_generators(digests: &Vec<config::Digest>) -> Generators {
-    digests.iter().map(|digest| {
-        match digest {
+    digests
+        .iter()
+        .map(|digest| match digest {
             config::Digest::CRC32 => crc32(),
             config::Digest::MD5 => md5(),
             config::Digest::SHA256 => sha256(),
             config::Digest::SHA512 => sha512(),
             config::Digest::RMD160 => rmd160(),
-
-        }
-    }).collect()
+        })
+        .collect()
 }
 
 type DigestResult = Result<Vec<Digest>, io::Error>;
 
-fn digest_file<R: io::Read>(mut input: R,
-                            generators: &Generators) -> DigestResult {
+fn digest_file<R: io::Read>(
+    mut input: R,
+    generators: &Generators,
+) -> DigestResult {
     let mut buffer = [0u8; 0x4_0000];
 
     loop {
@@ -168,9 +173,10 @@ fn digest_file<R: io::Read>(mut input: R,
         }
     }
 
-    let digests = generators.iter()
-                            .map(|generator| generator.result())
-                            .collect();
+    let digests = generators
+        .iter()
+        .map(|generator| generator.result())
+        .collect();
 
     Ok(digests)
 }
@@ -193,8 +199,7 @@ impl fmt::Display for Error {
                 let pathstr = path.to_str().unwrap();
                 write!(f, "unable to read from '{}'", pathstr)
             }
-            Error::StdinReadError =>
-                write!(f, "unable to read from stdin"),
+            Error::StdinReadError => write!(f, "unable to read from stdin"),
         }
     }
 }
@@ -202,9 +207,9 @@ impl fmt::Display for Error {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::process;
     use config;
     use digest::test_digests::*;
+    use std::process;
 
     #[test]
     fn choose_actions() {
@@ -216,15 +221,18 @@ mod tests {
         let cli = vec!["checksum", "--md5"];
         let config = config::Config::new(cli.iter()).unwrap();
         let action = choose_action(config);
-        assert_eq!(action,
-                   Action::DigestStdin(vec![config::Digest::MD5]));
+        assert_eq!(action, Action::DigestStdin(vec![config::Digest::MD5]));
 
         let cli = vec!["checksum", "--md5", "foo"];
         let config = config::Config::new(cli.iter()).unwrap();
         let action = choose_action(config);
-        assert_eq!(action,
-                   Action::DigestFiles(vec![config::Digest::MD5],
-                                       vec![path::PathBuf::from("foo")]));
+        assert_eq!(
+            action,
+            Action::DigestFiles(
+                vec![config::Digest::MD5],
+                vec![path::PathBuf::from("foo")]
+            )
+        );
     }
 
     #[test]
@@ -257,26 +265,30 @@ mod tests {
 
         super::update_digests(&generators, &data);
 
-        let digests: Vec<digest::Digest> =
-            generators.iter()
-                      .map(|generator| generator.result())
-                      .collect();
+        let digests: Vec<digest::Digest> = generators
+            .iter()
+            .map(|generator| generator.result())
+            .collect();
 
-        assert_eq!(digests, vec![CRC32_ZERO_400D,
-                                 MD5_ZERO_400D,
-                                 SHA256_ZERO_400D,
-                                 SHA512_ZERO_400D,
-                                 RMD160_ZERO_400D]);
+        assert_eq!(
+            digests,
+            vec![
+                CRC32_ZERO_400D,
+                MD5_ZERO_400D,
+                SHA256_ZERO_400D,
+                SHA512_ZERO_400D,
+                RMD160_ZERO_400D
+            ]
+        );
     }
 
     #[test]
     fn digest_stdin() {
-        let mut child =
-            process::Command::new("/bin/cat")
-                             .arg(test_data("zero-400d"))
-                             .stdout(process::Stdio::piped())
-                             .spawn()
-                             .expect("failed to execute /bin/cat");
+        let mut child = process::Command::new("/bin/cat")
+            .arg(test_data("zero-400d"))
+            .stdout(process::Stdio::piped())
+            .spawn()
+            .expect("failed to execute /bin/cat");
         child.wait().expect("failed to wait on child");
         let child_stdout =
             child.stdout.expect("unable to retrieve child stdout");
@@ -284,11 +296,16 @@ mod tests {
 
         let digests = digest_file(child_stdout, &generators).unwrap();
 
-        assert_eq!(digests, vec![CRC32_ZERO_400D,
-                                 MD5_ZERO_400D,
-                                 SHA256_ZERO_400D,
-                                 SHA512_ZERO_400D,
-                                 RMD160_ZERO_400D]);
+        assert_eq!(
+            digests,
+            vec![
+                CRC32_ZERO_400D,
+                MD5_ZERO_400D,
+                SHA256_ZERO_400D,
+                SHA512_ZERO_400D,
+                RMD160_ZERO_400D
+            ]
+        );
     }
 
     #[test]
@@ -298,11 +315,16 @@ mod tests {
 
         let digests = digest_file(empty, &generators).unwrap();
 
-        assert_eq!(digests, vec![CRC32_ZERO_EMPTY,
-                                 MD5_ZERO_EMPTY,
-                                 SHA256_ZERO_EMPTY,
-                                 SHA512_ZERO_EMPTY,
-                                 RMD160_ZERO_EMPTY]);
+        assert_eq!(
+            digests,
+            vec![
+                CRC32_ZERO_EMPTY,
+                MD5_ZERO_EMPTY,
+                SHA256_ZERO_EMPTY,
+                SHA512_ZERO_EMPTY,
+                RMD160_ZERO_EMPTY
+            ]
+        );
     }
 
     #[test]
@@ -312,11 +334,16 @@ mod tests {
 
         let digests = digest_file(zero, &generators).unwrap();
 
-        assert_eq!(digests, vec![CRC32_ZERO_11171,
-                                 MD5_ZERO_11171,
-                                 SHA256_ZERO_11171,
-                                 SHA512_ZERO_11171,
-                                 RMD160_ZERO_11171]);
+        assert_eq!(
+            digests,
+            vec![
+                CRC32_ZERO_11171,
+                MD5_ZERO_11171,
+                SHA256_ZERO_11171,
+                SHA512_ZERO_11171,
+                RMD160_ZERO_11171
+            ]
+        );
     }
 
     #[test]
@@ -326,11 +353,16 @@ mod tests {
 
         let digests = digest_file(random, &generators).unwrap();
 
-        assert_eq!(digests, vec![CRC32_RANDOM_11171,
-                                 MD5_RANDOM_11171,
-                                 SHA256_RANDOM_11171,
-                                 SHA512_RANDOM_11171,
-                                 RMD160_RANDOM_11171]);
+        assert_eq!(
+            digests,
+            vec![
+                CRC32_RANDOM_11171,
+                MD5_RANDOM_11171,
+                SHA256_RANDOM_11171,
+                SHA512_RANDOM_11171,
+                RMD160_RANDOM_11171
+            ]
+        );
     }
 
     fn generators() -> Vec<Box<dyn Generator>> {

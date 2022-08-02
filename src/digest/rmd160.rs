@@ -19,24 +19,31 @@ impl RMD160 {
             background_rmd160(rx_input, tx_result);
         });
 
-        RMD160 { tx_input, rx_result }
+        RMD160 {
+            tx_input,
+            rx_result,
+        }
     }
 }
 
 impl Generator for RMD160 {
     fn append(&self, data: Arc<[u8]>) {
-        self.tx_input.send(Message::Append(data))
+        self.tx_input
+            .send(Message::Append(data))
             .expect("unexpected error appending to digest");
     }
 
     fn result(&self) -> Digest {
         use std::time::Duration;
 
-        self.tx_input.send(Message::Finish)
+        self.tx_input
+            .send(Message::Finish)
             .expect("unexpected error finishing digest");
 
         let timeout = Duration::new(5, 0);
-        let result = self.rx_result.recv_timeout(timeout)
+        let result = self
+            .rx_result
+            .recv_timeout(timeout)
             .expect("unable to retrieve digest value");
 
         Digest::RMD160(result)
@@ -48,8 +55,10 @@ enum Message {
     Finish,
 }
 
-fn background_rmd160(rx_input: mpsc::Receiver<Message>,
-                     tx_result: mpsc::Sender<[u8; 20]>) {
+fn background_rmd160(
+    rx_input: mpsc::Receiver<Message>,
+    tx_result: mpsc::Sender<[u8; 20]>,
+) {
     let mut ctx = super::super::openssl::RIPEMD160_CTX::new();
 
     loop {
@@ -62,7 +71,7 @@ fn background_rmd160(rx_input: mpsc::Receiver<Message>,
 
                 tx_result.send(digest).unwrap();
                 ctx.reset()
-            },
+            }
             Err(_) => break,
         }
     }
@@ -70,8 +79,8 @@ fn background_rmd160(rx_input: mpsc::Receiver<Message>,
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use super::super::test_digests::*;
+    use super::*;
 
     #[test]
     fn rmd160_empty() {
@@ -118,4 +127,3 @@ mod tests {
         assert_eq!(digest, RMD160_ZERO_EMPTY);
     }
 }
-
