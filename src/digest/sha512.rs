@@ -1,6 +1,8 @@
 use std::sync::mpsc;
 use std::sync::Arc;
 
+use openssl_sys::{SHA512_Final, SHA512_Init, SHA512_Update, SHA512_CTX};
+
 use crate::digest::{Digest, Generator};
 
 pub struct SHA512 {
@@ -59,16 +61,15 @@ fn background_sha512(
     rx_input: mpsc::Receiver<Message>,
     tx_result: mpsc::Sender<[u8; 64]>,
 ) {
-    let mut ctx = super::super::openssl::SHA512_CTX::new();
+    let mut ctx = Context::new();
 
     loop {
         let msg = rx_input.recv();
 
         match msg {
-            Ok(Message::Append(data)) => ctx.update(&*data),
+            Ok(Message::Append(data)) => ctx.update(&data),
             Ok(Message::Finish) => {
                 let digest = ctx.result();
-
                 tx_result.send(digest).unwrap();
                 ctx.reset()
             }
@@ -77,12 +78,44 @@ fn background_sha512(
     }
 }
 
+struct Context {
+    ctx: SHA512_CTX,
+}
+
+impl Context {
+    const LENGTH: usize = 64;
+
+    pub fn new() -> Self {
+        let openssl_ctx = unsafe {
+            std::mem::MaybeUninit::<SHA512_CTX>::zeroed().assume_init()
+        };
+        let mut ctx = Self { ctx: openssl_ctx };
+        ctx.reset();
+        ctx
+    }
+
+    pub fn reset(&mut self) {
+        unsafe { SHA512_Init(&mut self.ctx) };
+    }
+
+    pub fn update(&mut self, data: &[u8]) {
+        unsafe {
+            SHA512_Update(&mut self.ctx, data.as_ptr() as _, data.len());
+        }
+    }
+
+    pub fn result(&mut self) -> [u8; Self::LENGTH] {
+        let mut digest = [0u8; Self::LENGTH];
+        unsafe { SHA512_Final(digest.as_mut_ptr(), &mut self.ctx) };
+        digest
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::super::test_digests::*;
     use super::*;
 
-    #[ignore]
     #[test]
     fn sha512_empty() {
         let sha512 = SHA512::new();
@@ -92,7 +125,6 @@ mod tests {
         assert_eq!(digest, SHA512_ZERO_EMPTY);
     }
 
-    #[ignore]
     #[test]
     fn sha512_data() {
         let sha512 = SHA512::new();
@@ -107,7 +139,6 @@ mod tests {
         assert_eq!(digest, SHA512_ZERO_400D);
     }
 
-    #[ignore]
     #[test]
     fn sha512_multiple() {
         let sha512 = SHA512::new();

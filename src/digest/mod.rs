@@ -254,7 +254,6 @@ mod tests {
         assert_eq!(digest, SHA256_ZERO_EMPTY);
     }
 
-    #[ignore]
     #[test]
     fn sha512_generator() {
         let sha512 = sha512();
