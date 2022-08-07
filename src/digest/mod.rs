@@ -247,7 +247,6 @@ mod tests {
         assert_eq!(digest, MD5_ZERO_EMPTY);
     }
 
-    #[ignore]
     #[test]
     fn sha256_generator() {
         let sha256 = sha256();

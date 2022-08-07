@@ -1,6 +1,8 @@
 use std::sync::mpsc;
 use std::sync::Arc;
 
+use openssl_sys::{SHA256_Final, SHA256_Init, SHA256_Update, SHA256_CTX};
+
 use crate::digest::{Digest, Generator};
 
 pub struct SHA256 {
@@ -59,21 +61,61 @@ fn background_sha256(
     rx_input: mpsc::Receiver<Message>,
     tx_result: mpsc::Sender<[u8; 32]>,
 ) {
-    let mut ctx = super::super::openssl::SHA256_CTX::new();
+    let mut ctx = Context::new();
 
     loop {
         let msg = rx_input.recv();
 
         match msg {
-            Ok(Message::Append(data)) => ctx.update(&*data),
+            Ok(Message::Append(data)) => {
+                ctx.update(&data);
+            }
             Ok(Message::Finish) => {
                 let digest = ctx.result();
-
                 tx_result.send(digest).unwrap();
-                ctx.reset()
+                ctx.reset();
             }
             Err(_) => break,
+        };
+    }
+}
+
+struct Context {
+    ctx: SHA256_CTX,
+}
+
+impl Context {
+    const LENGTH: usize = 32;
+
+    pub fn new() -> Self {
+        let mut ctx = Self {
+            ctx: SHA256_CTX {
+                h: [0; 8],
+                Nl: 0,
+                Nh: 0,
+                data: [0; 16],
+                num: 0,
+                md_len: 0,
+            },
+        };
+        ctx.reset();
+        ctx
+    }
+
+    pub fn reset(&mut self) {
+        unsafe { SHA256_Init(&mut self.ctx) };
+    }
+
+    pub fn update(&mut self, data: &[u8]) {
+        unsafe {
+            SHA256_Update(&mut self.ctx, data.as_ptr() as _, data.len());
         }
+    }
+
+    pub fn result(&mut self) -> [u8; Self::LENGTH] {
+        let mut digest = [0u8; Self::LENGTH];
+        unsafe { SHA256_Final(digest.as_mut_ptr(), &mut self.ctx) };
+        digest
     }
 }
 
@@ -82,7 +124,6 @@ mod tests {
     use super::super::test_digests::*;
     use super::*;
 
-    #[ignore]
     #[test]
     fn sha256_empty() {
         let sha256 = SHA256::new();
@@ -92,7 +133,6 @@ mod tests {
         assert_eq!(digest, SHA256_ZERO_EMPTY);
     }
 
-    #[ignore]
     #[test]
     fn sha256_data() {
         let sha256 = SHA256::new();
@@ -107,7 +147,6 @@ mod tests {
         assert_eq!(digest, SHA256_ZERO_400D);
     }
 
-    #[ignore]
     #[test]
     fn sha256_multiple() {
         let sha256 = SHA256::new();
