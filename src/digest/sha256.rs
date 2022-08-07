@@ -88,16 +88,10 @@ impl Context {
     const LENGTH: usize = 32;
 
     pub fn new() -> Self {
-        let mut ctx = Self {
-            ctx: SHA256_CTX {
-                h: [0; 8],
-                Nl: 0,
-                Nh: 0,
-                data: [0; 16],
-                num: 0,
-                md_len: 0,
-            },
+        let openssl_ctx = unsafe {
+            std::mem::MaybeUninit::<SHA256_CTX>::zeroed().assume_init()
         };
+        let mut ctx = Self { ctx: openssl_ctx };
         ctx.reset();
         ctx
     }
