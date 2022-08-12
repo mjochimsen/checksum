@@ -21,7 +21,7 @@ impl SHA512 {
         let (tx_result, rx_result) = mpsc::channel();
 
         thread::spawn(move || {
-            background_sha512(rx_input, tx_result);
+            background_sha512(&rx_input, &tx_result);
         });
 
         SHA512 {
@@ -61,8 +61,8 @@ enum Message {
 }
 
 fn background_sha512(
-    rx_input: mpsc::Receiver<Message>,
-    tx_result: mpsc::Sender<[u8; 64]>,
+    rx_input: &mpsc::Receiver<Message>,
+    tx_result: &mpsc::Sender<[u8; 64]>,
 ) {
     let mut ctx = Context::new();
 
@@ -74,7 +74,7 @@ fn background_sha512(
             Ok(Message::Finish) => {
                 let digest = ctx.result();
                 tx_result.send(digest).unwrap();
-                ctx.reset()
+                ctx.reset();
             }
             Err(_) => break,
         }
@@ -104,7 +104,7 @@ impl Context {
 
     pub fn update(&mut self, data: &[u8]) {
         unsafe {
-            EVP_DigestUpdate(self.ctx, data.as_ptr() as _, data.len());
+            EVP_DigestUpdate(self.ctx, data.as_ptr().cast(), data.len());
         }
     }
 
@@ -112,7 +112,7 @@ impl Context {
         let mut len = 0;
         let mut buffer = [0u8; EVP_MAX_MD_SIZE as usize];
         unsafe { EVP_DigestFinal(self.ctx, buffer.as_mut_ptr(), &mut len) };
-        assert!(Self::LENGTH as u32 == len);
+        assert!(Self::LENGTH == len as usize);
         let mut digest = [0; Self::LENGTH];
         digest[..Self::LENGTH].copy_from_slice(&buffer[..Self::LENGTH]);
         self.reset();

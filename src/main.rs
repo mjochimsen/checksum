@@ -1,4 +1,4 @@
-extern crate libc;
+#![warn(clippy::all, clippy::pedantic)]
 
 use std::fmt;
 use std::fs;
@@ -9,7 +9,7 @@ mod config;
 mod digest;
 
 use config::Config;
-use digest::*;
+use digest::{crc32, md5, rmd160, sha256, sha512, Digest, Generator};
 
 fn main() {
     let config = match Config::new(std::env::args()) {
@@ -21,9 +21,12 @@ fn main() {
     };
 
     let result = match choose_action(config) {
-        Action::ShowHelp => show_help(),
-        Action::DigestStdin(digests) => digest_stdin(digests),
-        Action::DigestFiles(digests, paths) => digest_files(digests, paths),
+        Action::ShowHelp => {
+            show_help();
+            Ok(())
+        }
+        Action::DigestStdin(digests) => digest_stdin(&digests),
+        Action::DigestFiles(digests, paths) => digest_files(&digests, paths),
     };
 
     if result.is_err() {
@@ -48,50 +51,46 @@ fn choose_action(config: Config) -> Action {
     }
 }
 
-fn show_help() -> Result<(), ()> {
+fn show_help() {
     print!("{}", Config::help());
-    Ok(())
 }
 
-fn digest_stdin(digests: Vec<config::Digest>) -> Result<(), ()> {
+fn digest_stdin(digests: &[config::Digest]) -> Result<(), ()> {
     // Create the generators based on the digests listed in the config.
-    let generators = create_generators(&digests);
+    let generators = create_generators(digests);
 
     let input = io::stdin();
-    match digest_file(input, &generators) {
-        Ok(digests) => print_digests(digests, None),
-        Err(_) => {
-            print_error(Error::StdinReadError);
-            return Err(());
-        }
+    if let Ok(digests) = digest_file(input, &generators) {
+        print_digests(&digests, None);
+    } else {
+        print_error(&Error::StdinReadError);
+        return Err(());
     }
     Ok(())
 }
 
 fn digest_files(
-    digests: Vec<config::Digest>,
+    digests: &[config::Digest],
     paths: Vec<path::PathBuf>,
 ) -> Result<(), ()> {
     // Create the generators based on the digests listed in the config.
-    let generators = create_generators(&digests);
+    let generators = create_generators(digests);
     let mut error = false;
 
     for path in paths {
-        let file = match fs::File::open(&path) {
-            Ok(file) => file,
-            Err(_) => {
-                print_error(Error::FileOpenError(path));
-                error = true;
-                continue;
-            }
+        let file = if let Ok(file) = fs::File::open(&path) {
+            file
+        } else {
+            print_error(&Error::FileOpenError(path));
+            error = true;
+            continue;
         };
-        match digest_file(file, &generators) {
-            Ok(digests) => print_digests(digests, Some(&path)),
-            Err(_) => {
-                print_error(Error::FileReadError(path));
-                error = true;
-                continue;
-            }
+        if let Ok(digests) = digest_file(file, &generators) {
+            print_digests(&digests, Some(&path));
+        } else {
+            print_error(&Error::FileReadError(path));
+            error = true;
+            continue;
         }
     }
 
@@ -109,17 +108,17 @@ pub enum Error {
     StdinReadError,
 }
 
-fn print_error(error: Error) {
+fn print_error(error: &Error) {
     eprintln!("{}", error);
 }
 
-fn print_digests(digests: Vec<Digest>, path: Option<&path::Path>) {
+fn print_digests(digests: &[Digest], path: Option<&path::Path>) {
     for digest in digests {
         print_digest(digest, path);
     }
 }
 
-fn print_digest(digest: Digest, path: Option<&path::Path>) {
+fn print_digest(digest: &Digest, path: Option<&path::Path>) {
     let digest_name = match digest {
         Digest::CRC32(_) => "CRC32",
         Digest::MD5(_) => "MD5",

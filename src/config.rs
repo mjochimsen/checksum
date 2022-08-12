@@ -74,25 +74,24 @@ Using the '--help' or '-h' option will print this text.
         let mut digests: Vec<Digest> = vec![];
         let mut paths: Vec<path::PathBuf> = vec![];
 
-        for arg in args.iter() {
+        for arg in &args {
             // Parse the argument.
             let arg = Argument::parse(arg);
 
             match arg {
                 Argument::Help => {
                     // Set the help flag.
-                    help = true
+                    help = true;
                 }
                 Argument::Digest(digest) => {
                     // Add the digest to list of digests. We don't
                     // permit the same digest to appear more than
                     // once. If it does, return an error.
-                    if !digests.contains(&digest) {
-                        digests.push(digest);
-                    } else {
+                    if digests.contains(&digest) {
                         let error = Error::DuplicateDigest(digest);
                         return Err(error);
                     }
+                    digests.push(digest);
                 }
                 Argument::Filename(filename) => {
                     // Convert the filename to a PathBuf and add it
@@ -122,8 +121,8 @@ Using the '--help' or '-h' option will print this text.
         Ok(Config {
             cmd,
             help,
-            digests,
             paths,
+            digests,
         })
     }
 

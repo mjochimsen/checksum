@@ -17,7 +17,7 @@ impl CRC32 {
         let (tx_result, rx_result) = mpsc::channel();
 
         thread::spawn(move || {
-            background_crc32(rx_input, tx_result);
+            background_crc32(&rx_input, &tx_result);
         });
 
         CRC32 {
@@ -57,8 +57,8 @@ enum Message {
 }
 
 fn background_crc32(
-    rx_input: mpsc::Receiver<Message>,
-    tx_result: mpsc::Sender<u32>,
+    rx_input: &mpsc::Receiver<Message>,
+    tx_result: &mpsc::Sender<u32>,
 ) {
     let mut crc: u32 = 0;
 
