@@ -239,7 +239,6 @@ mod tests {
         assert_eq!(digest, CRC32_ZERO_EMPTY);
     }
 
-    #[ignore]
     #[test]
     fn md5_generator() {
         let md5 = md5();
