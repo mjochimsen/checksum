@@ -70,7 +70,7 @@ fn background_md5(
         let msg = rx_input.recv();
 
         match msg {
-            Ok(Message::Append(data)) => ctx.update(&*data),
+            Ok(Message::Append(data)) => ctx.update(&data),
             Ok(Message::Finish) => {
                 let digest = ctx.result();
                 tx_result.send(digest).unwrap();
