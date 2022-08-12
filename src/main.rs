@@ -233,7 +233,6 @@ mod tests {
         );
     }
 
-    #[ignore]
     #[test]
     fn create_generators() {
         let digests = vec![
@@ -257,7 +256,6 @@ mod tests {
         assert_eq!(digest.result(), CRC32_ZERO_EMPTY);
     }
 
-    #[ignore]
     #[test]
     fn update_digests() {
         let generators = generators();
@@ -282,7 +280,6 @@ mod tests {
         );
     }
 
-    #[ignore]
     #[test]
     fn digest_stdin() {
         let mut child = process::Command::new("/bin/cat")
@@ -309,7 +306,6 @@ mod tests {
         );
     }
 
-    #[ignore]
     #[test]
     fn digest_empty() {
         let empty = fs::File::open(test_data("zero-0")).unwrap();
@@ -329,7 +325,6 @@ mod tests {
         );
     }
 
-    #[ignore]
     #[test]
     fn digest_zero() {
         let zero = fs::File::open(test_data("zero-11171")).unwrap();
@@ -349,7 +344,6 @@ mod tests {
         );
     }
 
-    #[ignore]
     #[test]
     fn digest_random() {
         let random = fs::File::open(test_data("random-11171")).unwrap();
