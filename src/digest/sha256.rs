@@ -1,7 +1,10 @@
 use std::sync::mpsc;
 use std::sync::Arc;
 
-use openssl_sys::{SHA256_Final, SHA256_Init, SHA256_Update, SHA256_CTX};
+use openssl_sys::{
+    EVP_DigestFinal, EVP_DigestInit, EVP_DigestUpdate, EVP_MD_CTX_free,
+    EVP_MD_CTX_new, EVP_sha256, EVP_MAX_MD_SIZE, EVP_MD_CTX,
+};
 
 use crate::digest::{Digest, Generator};
 
@@ -67,9 +70,7 @@ fn background_sha256(
         let msg = rx_input.recv();
 
         match msg {
-            Ok(Message::Append(data)) => {
-                ctx.update(&data);
-            }
+            Ok(Message::Append(data)) => ctx.update(&data),
             Ok(Message::Finish) => {
                 let digest = ctx.result();
                 tx_result.send(digest).unwrap();
@@ -81,35 +82,47 @@ fn background_sha256(
 }
 
 struct Context {
-    ctx: SHA256_CTX,
+    ctx: *mut EVP_MD_CTX,
 }
 
 impl Context {
     const LENGTH: usize = 32;
 
     pub fn new() -> Self {
-        let openssl_ctx = unsafe {
-            std::mem::MaybeUninit::<SHA256_CTX>::zeroed().assume_init()
-        };
-        let mut ctx = Self { ctx: openssl_ctx };
-        ctx.reset();
-        ctx
+        let ctx = unsafe { EVP_MD_CTX_new() };
+        assert!(!ctx.is_null());
+        let mut this = Self { ctx };
+        this.reset();
+        this
     }
 
     pub fn reset(&mut self) {
-        unsafe { SHA256_Init(&mut self.ctx) };
+        let sha256 = unsafe { EVP_sha256() };
+        assert!(!sha256.is_null());
+        unsafe { EVP_DigestInit(self.ctx, sha256) };
     }
 
     pub fn update(&mut self, data: &[u8]) {
         unsafe {
-            SHA256_Update(&mut self.ctx, data.as_ptr() as _, data.len());
+            EVP_DigestUpdate(self.ctx, data.as_ptr() as _, data.len());
         }
     }
 
     pub fn result(&mut self) -> [u8; Self::LENGTH] {
-        let mut digest = [0u8; Self::LENGTH];
-        unsafe { SHA256_Final(digest.as_mut_ptr(), &mut self.ctx) };
+        let mut len = 0;
+        let mut buffer = [0u8; EVP_MAX_MD_SIZE as usize];
+        unsafe { EVP_DigestFinal(self.ctx, buffer.as_mut_ptr(), &mut len) };
+        assert!(Self::LENGTH as u32 == len);
+        let mut digest = [0; Self::LENGTH];
+        digest[..Self::LENGTH].copy_from_slice(&buffer[..Self::LENGTH]);
+        self.reset();
         digest
+    }
+}
+
+impl Drop for Context {
+    fn drop(&mut self) {
+        unsafe { EVP_MD_CTX_free(self.ctx) };
     }
 }
 

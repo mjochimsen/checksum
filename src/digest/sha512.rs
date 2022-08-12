@@ -1,7 +1,10 @@
 use std::sync::mpsc;
 use std::sync::Arc;
 
-use openssl_sys::{SHA512_Final, SHA512_Init, SHA512_Update, SHA512_CTX};
+use openssl_sys::{
+    EVP_DigestFinal, EVP_DigestInit, EVP_DigestUpdate, EVP_MD_CTX_free,
+    EVP_MD_CTX_new, EVP_sha512, EVP_MAX_MD_SIZE, EVP_MD_CTX,
+};
 
 use crate::digest::{Digest, Generator};
 
@@ -79,35 +82,47 @@ fn background_sha512(
 }
 
 struct Context {
-    ctx: SHA512_CTX,
+    ctx: *mut EVP_MD_CTX,
 }
 
 impl Context {
     const LENGTH: usize = 64;
 
     pub fn new() -> Self {
-        let openssl_ctx = unsafe {
-            std::mem::MaybeUninit::<SHA512_CTX>::zeroed().assume_init()
-        };
-        let mut ctx = Self { ctx: openssl_ctx };
-        ctx.reset();
-        ctx
+        let ctx = unsafe { EVP_MD_CTX_new() };
+        assert!(!ctx.is_null());
+        let mut this = Self { ctx };
+        this.reset();
+        this
     }
 
     pub fn reset(&mut self) {
-        unsafe { SHA512_Init(&mut self.ctx) };
+        let sha512 = unsafe { EVP_sha512() };
+        assert!(!sha512.is_null());
+        unsafe { EVP_DigestInit(self.ctx, sha512) };
     }
 
     pub fn update(&mut self, data: &[u8]) {
         unsafe {
-            SHA512_Update(&mut self.ctx, data.as_ptr() as _, data.len());
+            EVP_DigestUpdate(self.ctx, data.as_ptr() as _, data.len());
         }
     }
 
     pub fn result(&mut self) -> [u8; Self::LENGTH] {
-        let mut digest = [0u8; Self::LENGTH];
-        unsafe { SHA512_Final(digest.as_mut_ptr(), &mut self.ctx) };
+        let mut len = 0;
+        let mut buffer = [0u8; EVP_MAX_MD_SIZE as usize];
+        unsafe { EVP_DigestFinal(self.ctx, buffer.as_mut_ptr(), &mut len) };
+        assert!(Self::LENGTH as u32 == len);
+        let mut digest = [0; Self::LENGTH];
+        digest[..Self::LENGTH].copy_from_slice(&buffer[..Self::LENGTH]);
+        self.reset();
         digest
+    }
+}
+
+impl Drop for Context {
+    fn drop(&mut self) {
+        unsafe { EVP_MD_CTX_free(self.ctx) };
     }
 }
 
