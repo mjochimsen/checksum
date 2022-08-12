@@ -1,6 +1,11 @@
 use std::sync::mpsc;
 use std::sync::Arc;
 
+use openssl_sys::{
+    EVP_DigestFinal, EVP_DigestInit, EVP_DigestUpdate, EVP_MD_CTX_free,
+    EVP_MD_CTX_new, EVP_ripemd160, EVP_MAX_MD_SIZE, EVP_MD_CTX,
+};
+
 use crate::digest::{Digest, Generator};
 
 pub struct RMD160 {
@@ -59,21 +64,64 @@ fn background_rmd160(
     rx_input: mpsc::Receiver<Message>,
     tx_result: mpsc::Sender<[u8; 20]>,
 ) {
-    let mut ctx = super::super::openssl::RIPEMD160_CTX::new();
+    let mut ctx = Context::new();
 
     loop {
         let msg = rx_input.recv();
 
         match msg {
-            Ok(Message::Append(data)) => ctx.update(&*data),
+            Ok(Message::Append(data)) => ctx.update(&data),
             Ok(Message::Finish) => {
                 let digest = ctx.result();
-
                 tx_result.send(digest).unwrap();
-                ctx.reset()
             }
             Err(_) => break,
         }
+    }
+}
+
+struct Context {
+    ctx: *mut EVP_MD_CTX,
+}
+
+impl Context {
+    const LENGTH: usize = 20;
+
+    pub fn new() -> Self {
+        let ctx = unsafe { EVP_MD_CTX_new() };
+        assert!(!ctx.is_null());
+        let mut this = Self { ctx };
+        this.reset();
+        this
+    }
+
+    pub fn reset(&mut self) {
+        let ripemd160 = unsafe { EVP_ripemd160() };
+        assert!(!ripemd160.is_null());
+        unsafe { EVP_DigestInit(self.ctx, ripemd160) };
+    }
+
+    pub fn update(&mut self, data: &[u8]) {
+        unsafe {
+            EVP_DigestUpdate(self.ctx, data.as_ptr() as _, data.len());
+        }
+    }
+
+    pub fn result(&mut self) -> [u8; Self::LENGTH] {
+        let mut len = 0;
+        let mut buffer = [0u8; EVP_MAX_MD_SIZE as usize];
+        unsafe { EVP_DigestFinal(self.ctx, buffer.as_mut_ptr(), &mut len) };
+        assert!(Self::LENGTH as u32 == len);
+        let mut digest = [0; Self::LENGTH];
+        digest[..Self::LENGTH].copy_from_slice(&buffer[..Self::LENGTH]);
+        self.reset();
+        digest
+    }
+}
+
+impl Drop for Context {
+    fn drop(&mut self) {
+        unsafe { EVP_MD_CTX_free(self.ctx) };
     }
 }
 
@@ -82,7 +130,6 @@ mod tests {
     use super::super::test_digests::*;
     use super::*;
 
-    #[ignore]
     #[test]
     fn rmd160_empty() {
         let rmd160 = RMD160::new();
@@ -92,7 +139,6 @@ mod tests {
         assert_eq!(digest, RMD160_ZERO_EMPTY);
     }
 
-    #[ignore]
     #[test]
     fn rmd160_data() {
         let rmd160 = RMD160::new();
@@ -107,7 +153,6 @@ mod tests {
         assert_eq!(digest, RMD160_ZERO_400D);
     }
 
-    #[ignore]
     #[test]
     fn rmd160_multiple() {
         let rmd160 = RMD160::new();

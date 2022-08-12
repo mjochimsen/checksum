@@ -260,7 +260,6 @@ mod tests {
         assert_eq!(digest, SHA512_ZERO_EMPTY);
     }
 
-    #[ignore]
     #[test]
     fn rmd160_generator() {
         let rmd160 = rmd160();
