@@ -7,7 +7,6 @@ use std::path;
 
 mod config;
 mod digest;
-mod openssl;
 
 use config::Config;
 use digest::*;
