@@ -316,7 +316,7 @@ impl Argument {
 }
 
 #[cfg(test)]
-#[path = "../../test_digests.rs"]
+#[path = "../../test_digests/mod.rs"]
 mod test_digests;
 
 #[cfg(test)]
@@ -662,6 +662,6 @@ mod tests {
     }
 
     fn test_data(filename: &str) -> PathBuf {
-        PathBuf::from_iter(&["tests", "data", filename])
+        PathBuf::from_iter(&["src", "test_digests", filename])
     }
 }
