@@ -1,11 +1,11 @@
 use std::fmt;
-use std::path;
+use std::path::PathBuf;
 
 #[derive(Clone, PartialEq, Debug)]
 pub struct Config {
     pub cmd: String,
     pub help: bool,
-    pub paths: Vec<path::PathBuf>,
+    pub paths: Vec<PathBuf>,
     pub digests: Vec<DigestKind>,
 }
 
@@ -37,7 +37,7 @@ impl Config {
         // used in the Config structure.
         let mut help = false;
         let mut digests: Vec<DigestKind> = vec![];
-        let mut paths: Vec<path::PathBuf> = vec![];
+        let mut paths: Vec<PathBuf> = vec![];
 
         for arg in args {
             // Parse the argument.
@@ -59,7 +59,7 @@ impl Config {
                 Argument::Filename(filename) => {
                     // Convert the filename to a PathBuf and add it
                     // to the list of paths.
-                    let path = path::PathBuf::from(filename);
+                    let path = PathBuf::from(filename);
                     paths.push(path);
                 }
                 Argument::Error(error) => {
@@ -264,7 +264,7 @@ mod tests {
         );
         assert_eq!(
             config.paths,
-            vec![path::PathBuf::from("some"), path::PathBuf::from("files")]
+            vec![PathBuf::from("some"), PathBuf::from("files")]
         );
     }
 
