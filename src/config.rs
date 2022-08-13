@@ -21,7 +21,7 @@ pub enum Digest {
 #[derive(Clone, PartialEq, Debug)]
 pub enum Error {
     InvalidOption(String),
-    DuplicateDigest(Digest),
+    DuplicateOption(String),
 }
 
 impl Config {
@@ -44,9 +44,7 @@ impl Config {
 
         for arg in &args {
             // Parse the argument.
-            let arg = Argument::parse(arg);
-
-            match arg {
+            match Argument::parse(arg) {
                 Argument::Help => {
                     // Set the help flag.
                     help = true;
@@ -56,7 +54,7 @@ impl Config {
                     // permit the same digest to appear more than
                     // once. If it does, return an error.
                     if digests.contains(&digest) {
-                        let error = Error::DuplicateDigest(digest);
+                        let error = Error::DuplicateOption(arg.clone());
                         return Err(error);
                     }
                     digests.push(digest);
@@ -105,15 +103,8 @@ impl fmt::Display for Error {
             Error::InvalidOption(option) => {
                 write!(f, "invalid option '{}'", option)
             }
-            Error::DuplicateDigest(digest) => {
-                let digest_option = match digest {
-                    Digest::CRC32 => "--crc32",
-                    Digest::MD5 => "--md5",
-                    Digest::SHA256 => "--sha256",
-                    Digest::SHA512 => "--sha512",
-                    Digest::RMD160 => "--rmd160",
-                };
-                write!(f, "duplicate digest option '{}'", digest_option)
+            Error::DuplicateOption(option) => {
+                write!(f, "duplicate digest option '{}'", option)
             }
         }
     }
@@ -306,7 +297,7 @@ mod tests {
         let cli = vec!["checksum", "--md5", "--md5"];
         let config = Config::new(cli.iter());
         let error = config.err();
-        let expected = Error::DuplicateDigest(Digest::MD5);
+        let expected = Error::DuplicateOption(String::from("--md5"));
         assert_eq!(error, Some(expected));
     }
 
@@ -316,23 +307,23 @@ mod tests {
         let errstr = format!("{}", error);
         assert_eq!(errstr, "invalid option '--foo'");
 
-        let error = Error::DuplicateDigest(Digest::CRC32);
+        let error = Error::DuplicateOption(String::from("--crc32"));
         let errstr = format!("{}", error);
         assert_eq!(errstr, "duplicate digest option '--crc32'");
 
-        let error = Error::DuplicateDigest(Digest::MD5);
+        let error = Error::DuplicateOption(String::from("--md5"));
         let errstr = format!("{}", error);
         assert_eq!(errstr, "duplicate digest option '--md5'");
 
-        let error = Error::DuplicateDigest(Digest::SHA256);
+        let error = Error::DuplicateOption(String::from("--sha256"));
         let errstr = format!("{}", error);
         assert_eq!(errstr, "duplicate digest option '--sha256'");
 
-        let error = Error::DuplicateDigest(Digest::SHA512);
+        let error = Error::DuplicateOption(String::from("--sha512"));
         let errstr = format!("{}", error);
         assert_eq!(errstr, "duplicate digest option '--sha512'");
 
-        let error = Error::DuplicateDigest(Digest::RMD160);
+        let error = Error::DuplicateOption(String::from("--rmd160"));
         let errstr = format!("{}", error);
         assert_eq!(errstr, "duplicate digest option '--rmd160'");
     }
