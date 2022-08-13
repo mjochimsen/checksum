@@ -136,51 +136,38 @@ mod tests {
 
     #[test]
     fn parse_argument() {
-        let help_arg = String::from("--help");
-        assert_eq!(Argument::parse(&help_arg), Argument::Help);
-        let help_arg = String::from("-h");
-        assert_eq!(Argument::parse(&help_arg), Argument::Help);
+        assert_eq!(Argument::parse("--help"), Argument::Help);
+        assert_eq!(Argument::parse("-h"), Argument::Help);
 
-        let digest_arg = String::from("--crc32");
         assert_eq!(
-            Argument::parse(&digest_arg),
+            Argument::parse("--crc32"),
             Argument::Digest(DigestKind::CRC32)
         );
-        let digest_arg = String::from("--md5");
         assert_eq!(
-            Argument::parse(&digest_arg),
+            Argument::parse("--md5"),
             Argument::Digest(DigestKind::MD5)
         );
-        let digest_arg = String::from("--sha256");
         assert_eq!(
-            Argument::parse(&digest_arg),
+            Argument::parse("--sha256"),
             Argument::Digest(DigestKind::SHA256)
         );
-        let digest_arg = String::from("--sha512");
         assert_eq!(
-            Argument::parse(&digest_arg),
+            Argument::parse("--sha512"),
             Argument::Digest(DigestKind::SHA512)
         );
-        let digest_arg = String::from("--rmd160");
         assert_eq!(
-            Argument::parse(&digest_arg),
+            Argument::parse("--rmd160"),
             Argument::Digest(DigestKind::RMD160)
         );
 
-        let filename_arg = String::from("foo");
         assert_eq!(
-            Argument::parse(&filename_arg),
+            Argument::parse("foo"),
             Argument::Filename("foo".to_string())
         );
 
-        let error_arg = String::from("-q");
+        assert_eq!(Argument::parse("-q"), Argument::Error("-q".to_string()));
         assert_eq!(
-            Argument::parse(&error_arg),
-            Argument::Error("-q".to_string())
-        );
-        let error_arg = String::from("--foo");
-        assert_eq!(
-            Argument::parse(&error_arg),
+            Argument::parse("--foo"),
             Argument::Error("--foo".to_string())
         );
     }
@@ -188,9 +175,7 @@ mod tests {
     #[test]
     fn parse_help_cli() {
         let cli = vec!["checksum", "--help"];
-        let config = Config::new(cli.iter());
-        assert!(config.is_ok());
-        let config = config.unwrap();
+        let config = Config::new(cli.iter()).unwrap();
 
         assert_eq!(config.cmd, "checksum");
         assert_eq!(config.help, true);
@@ -204,9 +189,7 @@ mod tests {
             "checksum", "--crc32", "--md5", "--sha256", "--sha512",
             "--rmd160",
         ];
-        let config = Config::new(cli.iter());
-        assert!(config.is_ok());
-        let config = config.unwrap();
+        let config = Config::new(cli.iter()).unwrap();
 
         assert_eq!(config.cmd, "checksum");
         assert_eq!(config.help, false);
@@ -226,9 +209,7 @@ mod tests {
     #[test]
     fn parse_default_digests() {
         let cli = vec!["checksum"];
-        let config = Config::new(cli.iter());
-        assert!(config.is_ok());
-        let config = config.unwrap();
+        let config = Config::new(cli.iter()).unwrap();
 
         assert_eq!(config.cmd, "checksum");
         assert_eq!(config.help, false);
@@ -247,9 +228,7 @@ mod tests {
     #[test]
     fn parse_filenames() {
         let cli = vec!["checksum", "some", "files"];
-        let config = Config::new(cli.iter());
-        assert!(config.is_ok());
-        let config = config.unwrap();
+        let config = Config::new(cli.iter()).unwrap();
 
         assert_eq!(config.cmd, "checksum");
         assert_eq!(config.help, false);
@@ -271,61 +250,56 @@ mod tests {
     #[test]
     fn use_stdin() {
         let cli = vec!["checksum", "file"];
-        let config = Config::new(cli.iter());
-        assert!(config.is_ok());
-        let config = config.unwrap();
+        let config = Config::new(cli.iter()).unwrap();
         assert!(!config.use_stdin());
 
         let cli = vec!["checksum"];
-        let config = Config::new(cli.iter());
-        assert!(config.is_ok());
-        let config = config.unwrap();
+        let config = Config::new(cli.iter()).unwrap();
         assert!(config.use_stdin());
     }
 
     #[test]
     fn parse_invalid_option() {
         let cli = vec!["checksum", "--foo"];
-        let config = Config::new(cli.iter());
-        let error = config.err();
-        let expected = Error::InvalidOption(String::from("--foo"));
-        assert_eq!(error, Some(expected));
+        let error = Config::new(cli.iter()).unwrap_err();
+        assert_eq!(error, Error::InvalidOption(String::from("--foo")));
     }
 
     #[test]
     fn parse_duplicate_digest() {
         let cli = vec!["checksum", "--md5", "--md5"];
-        let config = Config::new(cli.iter());
-        let error = config.err();
-        let expected = Error::DuplicateOption(String::from("--md5"));
-        assert_eq!(error, Some(expected));
+        let error = Config::new(cli.iter()).unwrap_err();
+        assert_eq!(error, Error::DuplicateOption(String::from("--md5")));
     }
 
     #[test]
     fn format_error() {
         let error = Error::InvalidOption(String::from("--foo"));
-        let errstr = format!("{}", error);
-        assert_eq!(errstr, "invalid option '--foo'");
+        assert_eq!(format!("{}", error), "invalid option '--foo'");
 
         let error = Error::DuplicateOption(String::from("--crc32"));
-        let errstr = format!("{}", error);
-        assert_eq!(errstr, "duplicate digest option '--crc32'");
+        assert_eq!(format!("{}", error), "duplicate digest option '--crc32'");
 
         let error = Error::DuplicateOption(String::from("--md5"));
-        let errstr = format!("{}", error);
-        assert_eq!(errstr, "duplicate digest option '--md5'");
+        assert_eq!(format!("{}", error), "duplicate digest option '--md5'");
 
         let error = Error::DuplicateOption(String::from("--sha256"));
-        let errstr = format!("{}", error);
-        assert_eq!(errstr, "duplicate digest option '--sha256'");
+        assert_eq!(
+            format!("{}", error),
+            "duplicate digest option '--sha256'"
+        );
 
         let error = Error::DuplicateOption(String::from("--sha512"));
-        let errstr = format!("{}", error);
-        assert_eq!(errstr, "duplicate digest option '--sha512'");
+        assert_eq!(
+            format!("{}", error),
+            "duplicate digest option '--sha512'"
+        );
 
         let error = Error::DuplicateOption(String::from("--rmd160"));
-        let errstr = format!("{}", error);
-        assert_eq!(errstr, "duplicate digest option '--rmd160'");
+        assert_eq!(
+            format!("{}", error),
+            "duplicate digest option '--rmd160'"
+        );
     }
 
     #[test]
