@@ -136,7 +136,7 @@ mod tests {
 
         let digest = md5.result();
 
-        assert_eq!(digest, MD5_ZERO_EMPTY);
+        assert_eq!(digest, MD5_ZERO_0);
     }
 
     #[test]
@@ -159,7 +159,7 @@ mod tests {
 
         let digest = md5.result();
 
-        assert_eq!(digest, MD5_ZERO_EMPTY);
+        assert_eq!(digest, MD5_ZERO_0);
 
         let data = Arc::from([0; 0x4000]);
         md5.append(data);
@@ -172,6 +172,6 @@ mod tests {
 
         let digest = md5.result();
 
-        assert_eq!(digest, MD5_ZERO_EMPTY);
+        assert_eq!(digest, MD5_ZERO_0);
     }
 }

@@ -137,7 +137,7 @@ mod tests {
 
         let digest = sha256.result();
 
-        assert_eq!(digest, SHA256_ZERO_EMPTY);
+        assert_eq!(digest, SHA256_ZERO_0);
     }
 
     #[test]
@@ -160,7 +160,7 @@ mod tests {
 
         let digest = sha256.result();
 
-        assert_eq!(digest, SHA256_ZERO_EMPTY);
+        assert_eq!(digest, SHA256_ZERO_0);
 
         let data = Arc::from([0; 0x4000]);
         sha256.append(data);
@@ -173,6 +173,6 @@ mod tests {
 
         let digest = sha256.result();
 
-        assert_eq!(digest, SHA256_ZERO_EMPTY);
+        assert_eq!(digest, SHA256_ZERO_0);
     }
 }

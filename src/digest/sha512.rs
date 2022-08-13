@@ -137,7 +137,7 @@ mod tests {
 
         let digest = sha512.result();
 
-        assert_eq!(digest, SHA512_ZERO_EMPTY);
+        assert_eq!(digest, SHA512_ZERO_0);
     }
 
     #[test]
@@ -160,7 +160,7 @@ mod tests {
 
         let digest = sha512.result();
 
-        assert_eq!(digest, SHA512_ZERO_EMPTY);
+        assert_eq!(digest, SHA512_ZERO_0);
 
         let data = Arc::from([0; 0x4000]);
         sha512.append(data);
@@ -173,6 +173,6 @@ mod tests {
 
         let digest = sha512.result();
 
-        assert_eq!(digest, SHA512_ZERO_EMPTY);
+        assert_eq!(digest, SHA512_ZERO_0);
     }
 }

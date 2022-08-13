@@ -204,7 +204,6 @@ impl fmt::Display for Error {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use config;
     use digest::test_digests::*;
     use std::process;
 
@@ -244,21 +243,21 @@ mod tests {
         let generators = super::create_generators(&digests);
         assert_eq!(generators.len(), 5);
         let digest = &generators[0];
-        assert_eq!(digest.result(), MD5_ZERO_EMPTY);
+        assert_eq!(digest.result(), MD5_ZERO_0);
         let digest = &generators[1];
-        assert_eq!(digest.result(), SHA256_ZERO_EMPTY);
+        assert_eq!(digest.result(), SHA256_ZERO_0);
         let digest = &generators[2];
-        assert_eq!(digest.result(), SHA512_ZERO_EMPTY);
+        assert_eq!(digest.result(), SHA512_ZERO_0);
         let digest = &generators[3];
-        assert_eq!(digest.result(), RMD160_ZERO_EMPTY);
+        assert_eq!(digest.result(), RMD160_ZERO_0);
         let digest = &generators[4];
-        assert_eq!(digest.result(), CRC32_ZERO_EMPTY);
+        assert_eq!(digest.result(), CRC32_ZERO_0);
     }
 
     #[test]
     fn update_digests() {
         let generators = generators();
-        let data = [0u8; 0x400d];
+        let data = ZERO_400D;
 
         super::update_digests(&generators, &data);
 
@@ -315,11 +314,11 @@ mod tests {
         assert_eq!(
             digests,
             vec![
-                CRC32_ZERO_EMPTY,
-                MD5_ZERO_EMPTY,
-                SHA256_ZERO_EMPTY,
-                SHA512_ZERO_EMPTY,
-                RMD160_ZERO_EMPTY
+                CRC32_ZERO_0,
+                MD5_ZERO_0,
+                SHA256_ZERO_0,
+                SHA512_ZERO_0,
+                RMD160_ZERO_0
             ]
         );
     }

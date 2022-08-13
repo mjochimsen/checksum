@@ -104,7 +104,7 @@ mod tests {
 
         let digest = crc32.result();
 
-        assert_eq!(digest, CRC32_ZERO_EMPTY);
+        assert_eq!(digest, CRC32_ZERO_0);
     }
 
     #[test]
@@ -127,7 +127,7 @@ mod tests {
 
         let digest = crc32.result();
 
-        assert_eq!(digest, CRC32_ZERO_EMPTY);
+        assert_eq!(digest, CRC32_ZERO_0);
 
         let data = Arc::from([0; 0x4000]);
         crc32.append(data);
@@ -140,6 +140,6 @@ mod tests {
 
         let digest = crc32.result();
 
-        assert_eq!(digest, CRC32_ZERO_EMPTY);
+        assert_eq!(digest, CRC32_ZERO_0);
     }
 }
