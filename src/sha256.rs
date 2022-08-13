@@ -3,35 +3,35 @@ use std::sync::Arc;
 
 use openssl_sys::{
     EVP_DigestFinal, EVP_DigestInit, EVP_DigestUpdate, EVP_MD_CTX_free,
-    EVP_MD_CTX_new, EVP_sha512, EVP_MAX_MD_SIZE, EVP_MD_CTX,
+    EVP_MD_CTX_new, EVP_sha256, EVP_MAX_MD_SIZE, EVP_MD_CTX,
 };
 
-use crate::digest::{Digest, Generator};
+use crate::{Digest, Generator};
 
-pub struct SHA512 {
+pub struct SHA256 {
     tx_input: mpsc::SyncSender<Message>,
-    rx_result: mpsc::Receiver<[u8; 64]>,
+    rx_result: mpsc::Receiver<[u8; 32]>,
 }
 
-impl SHA512 {
-    pub fn new() -> SHA512 {
+impl SHA256 {
+    pub fn new() -> SHA256 {
         use std::thread;
 
         let (tx_input, rx_input) = mpsc::sync_channel(4);
         let (tx_result, rx_result) = mpsc::channel();
 
         thread::spawn(move || {
-            background_sha512(&rx_input, &tx_result);
+            background_sha256(&rx_input, &tx_result);
         });
 
-        SHA512 {
+        SHA256 {
             tx_input,
             rx_result,
         }
     }
 }
 
-impl Generator for SHA512 {
+impl Generator for SHA256 {
     fn append(&self, data: Arc<[u8]>) {
         self.tx_input
             .send(Message::Append(data))
@@ -51,7 +51,7 @@ impl Generator for SHA512 {
             .recv_timeout(timeout)
             .expect("unable to retrieve digest value");
 
-        Digest::SHA512(result)
+        Digest::SHA256(result)
     }
 }
 
@@ -60,9 +60,9 @@ enum Message {
     Finish,
 }
 
-fn background_sha512(
+fn background_sha256(
     rx_input: &mpsc::Receiver<Message>,
-    tx_result: &mpsc::Sender<[u8; 64]>,
+    tx_result: &mpsc::Sender<[u8; 32]>,
 ) {
     let mut ctx = Context::new();
 
@@ -77,7 +77,7 @@ fn background_sha512(
                 ctx.reset();
             }
             Err(_) => break,
-        }
+        };
     }
 }
 
@@ -86,7 +86,7 @@ struct Context {
 }
 
 impl Context {
-    const LENGTH: usize = 64;
+    const LENGTH: usize = 32;
 
     pub fn new() -> Self {
         let ctx = unsafe { EVP_MD_CTX_new() };
@@ -97,9 +97,9 @@ impl Context {
     }
 
     pub fn reset(&mut self) {
-        let sha512 = unsafe { EVP_sha512() };
-        assert!(!sha512.is_null());
-        unsafe { EVP_DigestInit(self.ctx, sha512) };
+        let sha256 = unsafe { EVP_sha256() };
+        assert!(!sha256.is_null());
+        unsafe { EVP_DigestInit(self.ctx, sha256) };
     }
 
     pub fn update(&mut self, data: &[u8]) {
@@ -132,47 +132,47 @@ mod tests {
     use super::*;
 
     #[test]
-    fn sha512_empty() {
-        let sha512 = SHA512::new();
+    fn sha256_empty() {
+        let sha256 = SHA256::new();
 
-        let digest = sha512.result();
+        let digest = sha256.result();
 
-        assert_eq!(digest, SHA512_ZERO_0);
+        assert_eq!(digest, SHA256_ZERO_0);
     }
 
     #[test]
-    fn sha512_data() {
-        let sha512 = SHA512::new();
+    fn sha256_data() {
+        let sha256 = SHA256::new();
 
         let data = Arc::from([0; 0x4000]);
-        sha512.append(data);
+        sha256.append(data);
         let data = Arc::from([0; 0x0d]);
-        sha512.append(data);
+        sha256.append(data);
 
-        let digest = sha512.result();
+        let digest = sha256.result();
 
-        assert_eq!(digest, SHA512_ZERO_400D);
+        assert_eq!(digest, SHA256_ZERO_400D);
     }
 
     #[test]
-    fn sha512_multiple() {
-        let sha512 = SHA512::new();
+    fn sha256_multiple() {
+        let sha256 = SHA256::new();
 
-        let digest = sha512.result();
+        let digest = sha256.result();
 
-        assert_eq!(digest, SHA512_ZERO_0);
+        assert_eq!(digest, SHA256_ZERO_0);
 
         let data = Arc::from([0; 0x4000]);
-        sha512.append(data);
+        sha256.append(data);
         let data = Arc::from([0; 0x0d]);
-        sha512.append(data);
+        sha256.append(data);
 
-        let digest = sha512.result();
+        let digest = sha256.result();
 
-        assert_eq!(digest, SHA512_ZERO_400D);
+        assert_eq!(digest, SHA256_ZERO_400D);
 
-        let digest = sha512.result();
+        let digest = sha256.result();
 
-        assert_eq!(digest, SHA512_ZERO_0);
+        assert_eq!(digest, SHA256_ZERO_0);
     }
 }

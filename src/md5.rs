@@ -3,35 +3,35 @@ use std::sync::Arc;
 
 use openssl_sys::{
     EVP_DigestFinal, EVP_DigestInit, EVP_DigestUpdate, EVP_MD_CTX_free,
-    EVP_MD_CTX_new, EVP_sha256, EVP_MAX_MD_SIZE, EVP_MD_CTX,
+    EVP_MD_CTX_new, EVP_md5, EVP_MAX_MD_SIZE, EVP_MD_CTX,
 };
 
-use crate::digest::{Digest, Generator};
+use crate::{Digest, Generator};
 
-pub struct SHA256 {
+pub struct MD5 {
     tx_input: mpsc::SyncSender<Message>,
-    rx_result: mpsc::Receiver<[u8; 32]>,
+    rx_result: mpsc::Receiver<[u8; 16]>,
 }
 
-impl SHA256 {
-    pub fn new() -> SHA256 {
+impl MD5 {
+    pub fn new() -> MD5 {
         use std::thread;
 
         let (tx_input, rx_input) = mpsc::sync_channel(4);
         let (tx_result, rx_result) = mpsc::channel();
 
         thread::spawn(move || {
-            background_sha256(&rx_input, &tx_result);
+            background_md5(&rx_input, &tx_result);
         });
 
-        SHA256 {
+        MD5 {
             tx_input,
             rx_result,
         }
     }
 }
 
-impl Generator for SHA256 {
+impl Generator for MD5 {
     fn append(&self, data: Arc<[u8]>) {
         self.tx_input
             .send(Message::Append(data))
@@ -51,7 +51,7 @@ impl Generator for SHA256 {
             .recv_timeout(timeout)
             .expect("unable to retrieve digest value");
 
-        Digest::SHA256(result)
+        Digest::MD5(result)
     }
 }
 
@@ -60,9 +60,9 @@ enum Message {
     Finish,
 }
 
-fn background_sha256(
+fn background_md5(
     rx_input: &mpsc::Receiver<Message>,
-    tx_result: &mpsc::Sender<[u8; 32]>,
+    tx_result: &mpsc::Sender<[u8; 16]>,
 ) {
     let mut ctx = Context::new();
 
@@ -74,10 +74,9 @@ fn background_sha256(
             Ok(Message::Finish) => {
                 let digest = ctx.result();
                 tx_result.send(digest).unwrap();
-                ctx.reset();
             }
             Err(_) => break,
-        };
+        }
     }
 }
 
@@ -86,7 +85,7 @@ struct Context {
 }
 
 impl Context {
-    const LENGTH: usize = 32;
+    const LENGTH: usize = 16;
 
     pub fn new() -> Self {
         let ctx = unsafe { EVP_MD_CTX_new() };
@@ -97,9 +96,9 @@ impl Context {
     }
 
     pub fn reset(&mut self) {
-        let sha256 = unsafe { EVP_sha256() };
-        assert!(!sha256.is_null());
-        unsafe { EVP_DigestInit(self.ctx, sha256) };
+        let md5 = unsafe { EVP_md5() };
+        assert!(!md5.is_null());
+        unsafe { EVP_DigestInit(self.ctx, md5) };
     }
 
     pub fn update(&mut self, data: &[u8]) {
@@ -132,47 +131,47 @@ mod tests {
     use super::*;
 
     #[test]
-    fn sha256_empty() {
-        let sha256 = SHA256::new();
+    fn md5_empty() {
+        let md5 = MD5::new();
 
-        let digest = sha256.result();
+        let digest = md5.result();
 
-        assert_eq!(digest, SHA256_ZERO_0);
+        assert_eq!(digest, MD5_ZERO_0);
     }
 
     #[test]
-    fn sha256_data() {
-        let sha256 = SHA256::new();
+    fn md5_data() {
+        let md5 = MD5::new();
 
         let data = Arc::from([0; 0x4000]);
-        sha256.append(data);
+        md5.append(data);
         let data = Arc::from([0; 0x0d]);
-        sha256.append(data);
+        md5.append(data);
 
-        let digest = sha256.result();
+        let digest = md5.result();
 
-        assert_eq!(digest, SHA256_ZERO_400D);
+        assert_eq!(digest, MD5_ZERO_400D);
     }
 
     #[test]
-    fn sha256_multiple() {
-        let sha256 = SHA256::new();
+    fn md5_multiple() {
+        let md5 = MD5::new();
 
-        let digest = sha256.result();
+        let digest = md5.result();
 
-        assert_eq!(digest, SHA256_ZERO_0);
+        assert_eq!(digest, MD5_ZERO_0);
 
         let data = Arc::from([0; 0x4000]);
-        sha256.append(data);
+        md5.append(data);
         let data = Arc::from([0; 0x0d]);
-        sha256.append(data);
+        md5.append(data);
 
-        let digest = sha256.result();
+        let digest = md5.result();
 
-        assert_eq!(digest, SHA256_ZERO_400D);
+        assert_eq!(digest, MD5_ZERO_400D);
 
-        let digest = sha256.result();
+        let digest = md5.result();
 
-        assert_eq!(digest, SHA256_ZERO_0);
+        assert_eq!(digest, MD5_ZERO_0);
     }
 }

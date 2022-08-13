@@ -6,7 +6,7 @@ use openssl_sys::{
     EVP_MD_CTX_new, EVP_ripemd160, EVP_MAX_MD_SIZE, EVP_MD_CTX,
 };
 
-use crate::digest::{Digest, Generator};
+use crate::{Digest, Generator};
 
 pub struct RMD160 {
     tx_input: mpsc::SyncSender<Message>,

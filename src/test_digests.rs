@@ -1,6 +1,6 @@
 use super::Digest;
 
-#[path = "../../tests/data/mod.rs"]
+#[path = "../tests/data/mod.rs"]
 mod test_data;
 
 pub use test_data::ZERO_0;
