@@ -37,8 +37,8 @@ fn main() {
 #[derive(Clone, PartialEq, Debug)]
 enum Action {
     ShowHelp,
-    DigestStdin(Vec<config::Digest>),
-    DigestFiles(Vec<config::Digest>, Vec<path::PathBuf>),
+    DigestStdin(Vec<config::DigestKind>),
+    DigestFiles(Vec<config::DigestKind>, Vec<path::PathBuf>),
 }
 
 fn choose_action(config: Config) -> Action {
@@ -55,7 +55,7 @@ fn show_help() {
     print!("{}", Config::HELP);
 }
 
-fn digest_stdin(digests: &[config::Digest]) -> Result<(), ()> {
+fn digest_stdin(digests: &[config::DigestKind]) -> Result<(), ()> {
     // Create the generators based on the digests listed in the config.
     let generators = create_generators(digests);
 
@@ -70,7 +70,7 @@ fn digest_stdin(digests: &[config::Digest]) -> Result<(), ()> {
 }
 
 fn digest_files(
-    digests: &[config::Digest],
+    digests: &[config::DigestKind],
     paths: Vec<path::PathBuf>,
 ) -> Result<(), ()> {
     // Create the generators based on the digests listed in the config.
@@ -140,15 +140,15 @@ fn print_digest(digest: &Digest, path: Option<&path::Path>) {
 
 type Generators = Vec<Box<dyn Generator>>;
 
-fn create_generators(digests: &[config::Digest]) -> Generators {
+fn create_generators(digests: &[config::DigestKind]) -> Generators {
     digests
         .iter()
         .map(|digest| match digest {
-            config::Digest::CRC32 => crc32(),
-            config::Digest::MD5 => md5(),
-            config::Digest::SHA256 => sha256(),
-            config::Digest::SHA512 => sha512(),
-            config::Digest::RMD160 => rmd160(),
+            config::DigestKind::CRC32 => crc32(),
+            config::DigestKind::MD5 => md5(),
+            config::DigestKind::SHA256 => sha256(),
+            config::DigestKind::SHA512 => sha512(),
+            config::DigestKind::RMD160 => rmd160(),
         })
         .collect()
 }
@@ -217,7 +217,10 @@ mod tests {
         let cli = vec!["checksum", "--md5"];
         let config = config::Config::new(cli.iter()).unwrap();
         let action = choose_action(config);
-        assert_eq!(action, Action::DigestStdin(vec![config::Digest::MD5]));
+        assert_eq!(
+            action,
+            Action::DigestStdin(vec![config::DigestKind::MD5])
+        );
 
         let cli = vec!["checksum", "--md5", "foo"];
         let config = config::Config::new(cli.iter()).unwrap();
@@ -225,7 +228,7 @@ mod tests {
         assert_eq!(
             action,
             Action::DigestFiles(
-                vec![config::Digest::MD5],
+                vec![config::DigestKind::MD5],
                 vec![path::PathBuf::from("foo")]
             )
         );
@@ -234,11 +237,11 @@ mod tests {
     #[test]
     fn create_generators() {
         let digests = vec![
-            config::Digest::MD5,
-            config::Digest::SHA256,
-            config::Digest::SHA512,
-            config::Digest::RMD160,
-            config::Digest::CRC32,
+            config::DigestKind::MD5,
+            config::DigestKind::SHA256,
+            config::DigestKind::SHA512,
+            config::DigestKind::RMD160,
+            config::DigestKind::CRC32,
         ];
         let generators = super::create_generators(&digests);
         assert_eq!(generators.len(), 5);

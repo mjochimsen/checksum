@@ -6,11 +6,11 @@ pub struct Config {
     pub cmd: String,
     pub help: bool,
     pub paths: Vec<path::PathBuf>,
-    pub digests: Vec<Digest>,
+    pub digests: Vec<DigestKind>,
 }
 
 #[derive(Clone, PartialEq, Debug)]
-pub enum Digest {
+pub enum DigestKind {
     CRC32,
     MD5,
     SHA256,
@@ -36,7 +36,7 @@ impl Config {
         // Convert the arguments into the components which will be
         // used in the Config structure.
         let mut help = false;
-        let mut digests: Vec<Digest> = vec![];
+        let mut digests: Vec<DigestKind> = vec![];
         let mut paths: Vec<path::PathBuf> = vec![];
 
         for arg in args {
@@ -74,10 +74,10 @@ impl Config {
         // SHA512, and RMD160.
         if digests.is_empty() && !help {
             digests = vec![
-                Digest::MD5,
-                Digest::SHA256,
-                Digest::SHA512,
-                Digest::RMD160,
+                DigestKind::MD5,
+                DigestKind::SHA256,
+                DigestKind::SHA512,
+                DigestKind::RMD160,
             ];
         }
 
@@ -111,7 +111,7 @@ impl fmt::Display for Error {
 enum Argument {
     Error(String),
     Help,
-    Digest(Digest),
+    Digest(DigestKind),
     Filename(String),
 }
 
@@ -120,15 +120,15 @@ impl Argument {
         if arg == "--help" || arg == "-h" {
             Argument::Help
         } else if arg == "--crc32" {
-            Argument::Digest(Digest::CRC32)
+            Argument::Digest(DigestKind::CRC32)
         } else if arg == "--md5" {
-            Argument::Digest(Digest::MD5)
+            Argument::Digest(DigestKind::MD5)
         } else if arg == "--sha256" {
-            Argument::Digest(Digest::SHA256)
+            Argument::Digest(DigestKind::SHA256)
         } else if arg == "--sha512" {
-            Argument::Digest(Digest::SHA512)
+            Argument::Digest(DigestKind::SHA512)
         } else if arg == "--rmd160" {
-            Argument::Digest(Digest::RMD160)
+            Argument::Digest(DigestKind::RMD160)
         } else if arg.starts_with('-') {
             Argument::Error(arg.clone())
         } else {
@@ -151,27 +151,27 @@ mod tests {
         let digest_arg = String::from("--crc32");
         assert_eq!(
             Argument::parse(&digest_arg),
-            Argument::Digest(Digest::CRC32)
+            Argument::Digest(DigestKind::CRC32)
         );
         let digest_arg = String::from("--md5");
         assert_eq!(
             Argument::parse(&digest_arg),
-            Argument::Digest(Digest::MD5)
+            Argument::Digest(DigestKind::MD5)
         );
         let digest_arg = String::from("--sha256");
         assert_eq!(
             Argument::parse(&digest_arg),
-            Argument::Digest(Digest::SHA256)
+            Argument::Digest(DigestKind::SHA256)
         );
         let digest_arg = String::from("--sha512");
         assert_eq!(
             Argument::parse(&digest_arg),
-            Argument::Digest(Digest::SHA512)
+            Argument::Digest(DigestKind::SHA512)
         );
         let digest_arg = String::from("--rmd160");
         assert_eq!(
             Argument::parse(&digest_arg),
-            Argument::Digest(Digest::RMD160)
+            Argument::Digest(DigestKind::RMD160)
         );
 
         let filename_arg = String::from("foo");
@@ -221,11 +221,11 @@ mod tests {
         assert_eq!(
             config.digests,
             vec![
-                Digest::CRC32,
-                Digest::MD5,
-                Digest::SHA256,
-                Digest::SHA512,
-                Digest::RMD160
+                DigestKind::CRC32,
+                DigestKind::MD5,
+                DigestKind::SHA256,
+                DigestKind::SHA512,
+                DigestKind::RMD160
             ]
         );
     }
@@ -242,7 +242,12 @@ mod tests {
         assert_eq!(config.paths.len(), 0);
         assert_eq!(
             config.digests,
-            vec![Digest::MD5, Digest::SHA256, Digest::SHA512, Digest::RMD160]
+            vec![
+                DigestKind::MD5,
+                DigestKind::SHA256,
+                DigestKind::SHA512,
+                DigestKind::RMD160
+            ]
         );
     }
 
@@ -257,7 +262,12 @@ mod tests {
         assert_eq!(config.help, false);
         assert_eq!(
             config.digests,
-            vec![Digest::MD5, Digest::SHA256, Digest::SHA512, Digest::RMD160]
+            vec![
+                DigestKind::MD5,
+                DigestKind::SHA256,
+                DigestKind::SHA512,
+                DigestKind::RMD160
+            ]
         );
         assert_eq!(
             config.paths,
