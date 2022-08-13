@@ -116,23 +116,16 @@ enum Argument {
 }
 
 impl Argument {
-    fn parse(arg: &String) -> Argument {
-        if arg == "--help" || arg == "-h" {
-            Argument::Help
-        } else if arg == "--crc32" {
-            Argument::Digest(DigestKind::CRC32)
-        } else if arg == "--md5" {
-            Argument::Digest(DigestKind::MD5)
-        } else if arg == "--sha256" {
-            Argument::Digest(DigestKind::SHA256)
-        } else if arg == "--sha512" {
-            Argument::Digest(DigestKind::SHA512)
-        } else if arg == "--rmd160" {
-            Argument::Digest(DigestKind::RMD160)
-        } else if arg.starts_with('-') {
-            Argument::Error(arg.clone())
-        } else {
-            Argument::Filename(arg.clone())
+    fn parse(arg: &str) -> Argument {
+        match arg {
+            "--help" | "-h" => Argument::Help,
+            "--crc32" => Argument::Digest(DigestKind::CRC32),
+            "--md5" => Argument::Digest(DigestKind::MD5),
+            "--sha256" => Argument::Digest(DigestKind::SHA256),
+            "--sha512" => Argument::Digest(DigestKind::SHA512),
+            "--rmd160" => Argument::Digest(DigestKind::RMD160),
+            arg if arg.starts_with('-') => Argument::Error(arg.to_string()),
+            filename => Argument::Filename(filename.to_string()),
         }
     }
 }
