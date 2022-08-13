@@ -124,7 +124,7 @@ pub fn rmd160() -> Box<dyn Generator> {
 }
 
 #[cfg(test)]
-mod test_digests;
+pub mod test_digests;
 
 #[cfg(test)]
 mod tests {

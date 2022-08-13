@@ -317,7 +317,7 @@ impl Argument {
 
 #[cfg(test)]
 #[path = "../../test_digests/mod.rs"]
-mod test_digests;
+pub mod test_digests;
 
 #[cfg(test)]
 mod tests {
