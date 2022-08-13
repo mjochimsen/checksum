@@ -29,7 +29,7 @@ impl PartialEq for DigestData {
                 left == right
             }
             (DigestData::SHA512(left), DigestData::SHA512(right)) => {
-                left[..31] == right[..31] && left[32..] == right[32..]
+                left == right
             }
             (DigestData::RMD160(left), DigestData::RMD160(right)) => {
                 left == right
