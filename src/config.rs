@@ -28,13 +28,10 @@ impl Config {
     pub const HELP: &'static str = include_str!("usage.txt");
 
     pub fn new<T: Iterator<Item = impl ToString>>(
-        args: T,
+        mut args: T,
     ) -> Result<Config, Error> {
-        // Collect the arguments into a vector of strings.
-        let mut args: Vec<String> = args.map(|arg| arg.to_string()).collect();
-
         // Pull the fist argument. This is the command name.
-        let cmd: String = args.remove(0);
+        let cmd = args.next().unwrap().to_string();
 
         // Convert the arguments into the components which will be
         // used in the Config structure.
@@ -42,9 +39,9 @@ impl Config {
         let mut digests: Vec<Digest> = vec![];
         let mut paths: Vec<path::PathBuf> = vec![];
 
-        for arg in &args {
+        for arg in args {
             // Parse the argument.
-            match Argument::parse(arg) {
+            match Argument::parse(&arg.to_string()) {
                 Argument::Help => {
                     // Set the help flag.
                     help = true;
@@ -54,7 +51,7 @@ impl Config {
                     // permit the same digest to appear more than
                     // once. If it does, return an error.
                     if digests.contains(&digest) {
-                        let error = Error::DuplicateOption(arg.clone());
+                        let error = Error::DuplicateOption(arg.to_string());
                         return Err(error);
                     }
                     digests.push(digest);
