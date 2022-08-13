@@ -10,7 +10,7 @@ mod sha256;
 mod sha512;
 
 #[derive(Clone, Copy, Eq)]
-pub enum Digest {
+pub enum DigestData {
     CRC32(u32),
     MD5([u8; 16]),
     SHA256([u8; 32]),
@@ -18,45 +18,51 @@ pub enum Digest {
     RMD160([u8; 20]),
 }
 
-impl PartialEq for Digest {
-    fn eq(&self, other: &Digest) -> bool {
+impl PartialEq for DigestData {
+    fn eq(&self, other: &DigestData) -> bool {
         match (self, other) {
-            (Digest::CRC32(left), Digest::CRC32(right)) => left == right,
-            (Digest::MD5(left), Digest::MD5(right)) => left == right,
-            (Digest::SHA256(left), Digest::SHA256(right)) => left == right,
-            (Digest::SHA512(left), Digest::SHA512(right)) => {
+            (DigestData::CRC32(left), DigestData::CRC32(right)) => {
+                left == right
+            }
+            (DigestData::MD5(left), DigestData::MD5(right)) => left == right,
+            (DigestData::SHA256(left), DigestData::SHA256(right)) => {
+                left == right
+            }
+            (DigestData::SHA512(left), DigestData::SHA512(right)) => {
                 left[..31] == right[..31] && left[32..] == right[32..]
             }
-            (Digest::RMD160(left), Digest::RMD160(right)) => left == right,
+            (DigestData::RMD160(left), DigestData::RMD160(right)) => {
+                left == right
+            }
             _ => false,
         }
     }
 }
 
-impl fmt::Debug for Digest {
+impl fmt::Debug for DigestData {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Digest::CRC32(digest) => {
+            DigestData::CRC32(digest) => {
                 write!(f, "CRC32(")?;
                 format_u32(f, *digest)?;
                 write!(f, ")")
             }
-            Digest::MD5(digest) => {
+            DigestData::MD5(digest) => {
                 write!(f, "MD5(")?;
                 format_bytes(f, digest)?;
                 write!(f, ")")
             }
-            Digest::SHA256(digest) => {
+            DigestData::SHA256(digest) => {
                 write!(f, "SHA256(")?;
                 format_bytes(f, digest)?;
                 write!(f, ")")
             }
-            Digest::SHA512(digest) => {
+            DigestData::SHA512(digest) => {
                 write!(f, "SHA512(")?;
                 format_bytes(f, digest)?;
                 write!(f, ")")
             }
-            Digest::RMD160(digest) => {
+            DigestData::RMD160(digest) => {
                 write!(f, "RMD160(")?;
                 format_bytes(f, digest)?;
                 write!(f, ")")
@@ -65,14 +71,14 @@ impl fmt::Debug for Digest {
     }
 }
 
-impl fmt::Display for Digest {
+impl fmt::Display for DigestData {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Digest::CRC32(digest) => format_u32(f, *digest),
-            Digest::MD5(digest) => format_bytes(f, digest),
-            Digest::SHA256(digest) => format_bytes(f, digest),
-            Digest::SHA512(digest) => format_bytes(f, digest),
-            Digest::RMD160(digest) => format_bytes(f, digest),
+            DigestData::CRC32(digest) => format_u32(f, *digest),
+            DigestData::MD5(digest) => format_bytes(f, digest),
+            DigestData::SHA256(digest) => format_bytes(f, digest),
+            DigestData::SHA512(digest) => format_bytes(f, digest),
+            DigestData::RMD160(digest) => format_bytes(f, digest),
         }
     }
 }
@@ -90,7 +96,7 @@ fn format_bytes(f: &mut fmt::Formatter, bytes: &[u8]) -> fmt::Result {
 
 pub trait Generator {
     fn append(&self, data: Arc<[u8]>);
-    fn result(&self) -> Digest;
+    fn result(&self) -> DigestData;
 }
 
 #[must_use]

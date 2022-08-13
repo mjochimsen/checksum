@@ -6,7 +6,7 @@ use openssl_sys::{
     EVP_MD_CTX_new, EVP_ripemd160, EVP_MAX_MD_SIZE, EVP_MD_CTX,
 };
 
-use crate::{Digest, Generator};
+use crate::{DigestData, Generator};
 
 pub struct RMD160 {
     tx_input: mpsc::SyncSender<Message>,
@@ -38,7 +38,7 @@ impl Generator for RMD160 {
             .expect("unexpected error appending to digest");
     }
 
-    fn result(&self) -> Digest {
+    fn result(&self) -> DigestData {
         use std::time::Duration;
 
         self.tx_input
@@ -51,7 +51,7 @@ impl Generator for RMD160 {
             .recv_timeout(timeout)
             .expect("unable to retrieve digest value");
 
-        Digest::RMD160(result)
+        DigestData::RMD160(result)
     }
 }
 

@@ -6,7 +6,7 @@ use openssl_sys::{
     EVP_MD_CTX_new, EVP_sha256, EVP_MAX_MD_SIZE, EVP_MD_CTX,
 };
 
-use crate::{Digest, Generator};
+use crate::{DigestData, Generator};
 
 pub struct SHA256 {
     tx_input: mpsc::SyncSender<Message>,
@@ -38,7 +38,7 @@ impl Generator for SHA256 {
             .expect("unexpected error appending to digest");
     }
 
-    fn result(&self) -> Digest {
+    fn result(&self) -> DigestData {
         use std::time::Duration;
 
         self.tx_input
@@ -51,7 +51,7 @@ impl Generator for SHA256 {
             .recv_timeout(timeout)
             .expect("unable to retrieve digest value");
 
-        Digest::SHA256(result)
+        DigestData::SHA256(result)
     }
 }
 

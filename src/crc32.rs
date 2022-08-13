@@ -1,7 +1,7 @@
 use std::sync::mpsc;
 use std::sync::Arc;
 
-use crate::{Digest, Generator};
+use crate::{DigestData, Generator};
 use libz_sys::crc32;
 
 pub struct CRC32 {
@@ -34,7 +34,7 @@ impl Generator for CRC32 {
             .expect("unexpected error appending to digest");
     }
 
-    fn result(&self) -> Digest {
+    fn result(&self) -> DigestData {
         use std::time::Duration;
 
         self.tx_input
@@ -47,7 +47,7 @@ impl Generator for CRC32 {
             .recv_timeout(timeout)
             .expect("unable to retrieve digest value");
 
-        Digest::CRC32(result)
+        DigestData::CRC32(result)
     }
 }
 

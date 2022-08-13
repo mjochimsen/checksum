@@ -5,7 +5,7 @@ use std::fs;
 use std::io;
 use std::path::{Path, PathBuf};
 
-use checksum::{crc32, md5, rmd160, sha256, sha512, Digest, Generator};
+use checksum::{crc32, md5, rmd160, sha256, sha512, DigestData, Generator};
 
 fn main() {
     let config = match Config::new(std::env::args()) {
@@ -110,19 +110,19 @@ fn print_error(error: &Error) {
     eprintln!("{}", error);
 }
 
-fn print_digests(digests: &[Digest], path: Option<&Path>) {
+fn print_digests(digests: &[DigestData], path: Option<&Path>) {
     for digest in digests {
         print_digest(digest, path);
     }
 }
 
-fn print_digest(digest: &Digest, path: Option<&Path>) {
+fn print_digest(digest: &DigestData, path: Option<&Path>) {
     let digest_name = match digest {
-        Digest::CRC32(_) => "CRC32",
-        Digest::MD5(_) => "MD5",
-        Digest::SHA256(_) => "SHA256",
-        Digest::SHA512(_) => "SHA512",
-        Digest::RMD160(_) => "RMD160",
+        DigestData::CRC32(_) => "CRC32",
+        DigestData::MD5(_) => "MD5",
+        DigestData::SHA256(_) => "SHA256",
+        DigestData::SHA512(_) => "SHA512",
+        DigestData::RMD160(_) => "RMD160",
     };
 
     match path {
@@ -151,7 +151,7 @@ fn create_generators(digests: &[DigestKind]) -> Generators {
         .collect()
 }
 
-type DigestResult = Result<Vec<Digest>, io::Error>;
+type DigestResult = Result<Vec<DigestData>, io::Error>;
 
 fn digest_file<R: io::Read>(
     mut input: R,
@@ -557,7 +557,7 @@ mod tests {
 
         super::update_digests(&generators, &data);
 
-        let digests: Vec<checksum::Digest> = generators
+        let digests: Vec<checksum::DigestData> = generators
             .iter()
             .map(|generator| generator.result())
             .collect();
