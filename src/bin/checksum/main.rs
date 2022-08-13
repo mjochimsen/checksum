@@ -5,9 +5,7 @@ use std::fs;
 use std::io;
 use std::path::{Path, PathBuf};
 
-mod digest;
-
-use digest::{crc32, md5, rmd160, sha256, sha512, Digest, Generator};
+use checksum::{crc32, md5, rmd160, sha256, sha512, Digest, Generator};
 
 fn main() {
     let config = match Config::new(std::env::args()) {
@@ -318,10 +316,14 @@ impl Argument {
 }
 
 #[cfg(test)]
+#[path = "../../digest/test_digests.rs"]
+mod test_digests;
+
+#[cfg(test)]
 mod tests {
     use super::*;
-    use digest::test_digests::*;
     use std::process;
+    use test_digests::*;
 
     #[test]
     fn parse_argument() {
@@ -555,7 +557,7 @@ mod tests {
 
         super::update_digests(&generators, &data);
 
-        let digests: Vec<digest::Digest> = generators
+        let digests: Vec<checksum::Digest> = generators
             .iter()
             .map(|generator| generator.result())
             .collect();
