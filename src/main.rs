@@ -52,7 +52,7 @@ fn choose_action(config: Config) -> Action {
 }
 
 fn show_help() {
-    print!("{}", Config::help());
+    print!("{}", Config::HELP);
 }
 
 fn digest_stdin(digests: &[config::Digest]) -> Result<(), ()> {

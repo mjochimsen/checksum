@@ -25,39 +25,7 @@ pub enum Error {
 }
 
 impl Config {
-    pub fn help() -> &'static str {
-        r#"usage: checksum [option]... [file]...
-       checksum [--help|-h]
-
-Compute checksums against a list of files. If no files are listed
-then the checksum is computed against stdin. Possible checksums
-include:
-
-    --crc32     32 bit Cyclic Redundancy Check (CRC)
-    --md5       MD5 Message Digest
-    --sha256    256-bit Secure Hash Algorithm 2 (SHA-2)
-    --sha512    512-bit Secure Hash Algorithm 2 (SHA-2)
-    --rmd160    160-bit RACE Integrity Primitives Evaluation
-                Message Digest (RIPEMD)
-
-If no checksum option is supplied then a default set of '--md5
---sha256 --sha512 --rmd160' is used. The computed checksum is output
-in the following format:
-
-    [ALGORITHM] (filename) = [HEXDIGEST]
-
-For example:
-
-    MD5 (somefile) = d41d8cd98f00b204e9800998ecf8427e
-
-Computing checksums on stdin will omit the filename from the output,
-like this:
-
-    MD5 = d41d8cd98f00b204e9800998ecf8427e
-
-Using the '--help' or '-h' option will print this text.
-"#
-    }
+    pub const HELP: &'static str = include_str!("usage.txt");
 
     pub fn new<T: Iterator<Item = impl ToString>>(
         args: T,
@@ -371,12 +339,11 @@ mod tests {
 
     #[test]
     fn help_text() {
-        let help_text = Config::help();
-        assert!(help_text.contains("--help"));
-        assert!(help_text.contains("--crc32"));
-        assert!(help_text.contains("--md5"));
-        assert!(help_text.contains("--sha256"));
-        assert!(help_text.contains("--sha512"));
-        assert!(help_text.contains("--rmd160"));
+        assert!(Config::HELP.contains("--help"));
+        assert!(Config::HELP.contains("--crc32"));
+        assert!(Config::HELP.contains("--md5"));
+        assert!(Config::HELP.contains("--sha256"));
+        assert!(Config::HELP.contains("--sha512"));
+        assert!(Config::HELP.contains("--rmd160"));
     }
 }
