@@ -2,7 +2,6 @@
 name = "checksum"
 version = "0.2.0"
 authors = ["Michael Jochimsen <mlj@troglodytics.org>"]
-build = "build.rs"
 edition = "2021"
 
 [dependencies]
