@@ -9,6 +9,40 @@ mod rmd160;
 mod sha256;
 mod sha512;
 
+/// The `Digest` trait describes a common interface to a digest algorithm,
+/// such as the 256-bit digest from the SHA-2 family of digests.
+pub trait Digest<'a> {
+    /// The number of bits in the digest.
+    fn bit_length(&self) -> usize;
+
+    /// The number of bytes required to hold the digest.
+    fn byte_length(&self) -> usize {
+        (self.bit_length() + 7) / 8
+    }
+
+    /// Update the `Digest` with additional data. If called after the
+    /// `digest()` method is called, the results are indeterminiate.
+    fn update(&mut self, data: &[u8]);
+
+    /// Retrieve the digest data as a slice of `byte_length()` bytes.
+    /// After this method is called, the `update()` method may no longer
+    /// be used. Doing so will result in indeterminate results.
+    fn digest(&mut self) -> &'a [u8];
+
+    /// A convenience metho which will return the digest as a hexadecimal
+    /// string. After this method is called the `update()` method may no
+    /// longer be used. Doing so will result in indeterminate results.
+    fn digest_str(&mut self) -> String {
+        let digest = self.digest();
+        let mut digest_str = String::with_capacity(self.byte_length() * 2);
+        for byte in digest {
+            let byte_str = format!("{:02x}", byte);
+            digest_str.push_str(&byte_str);
+        }
+        digest_str
+    }
+}
+
 #[derive(Clone, Copy, Eq)]
 pub enum DigestData {
     CRC32(u32),
