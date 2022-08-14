@@ -9,14 +9,19 @@ use openssl_sys::{
 
 use crate::{Digest, DigestData, Generator};
 
+/// A structure used to generated a MD5 digest.
 pub struct MD5 {
+    /// The OpenSSL context used to generate the digest.
     ctx: *mut EVP_MD_CTX,
+    /// The digest data (once the digest is fully computed).
     digest: [u8; Self::LENGTH],
 }
 
 impl MD5 {
+    /// The length of the MD5 digest, in bytes.
     const LENGTH: usize = 16;
 
+    /// Create a new MD5 structure to generate a digest.
     pub fn new() -> Self {
         let ctx = unsafe { EVP_MD_CTX_new() };
         assert!(!ctx.is_null());
@@ -31,10 +36,12 @@ impl MD5 {
 }
 
 impl Digest<{ MD5::LENGTH }> for MD5 {
+    /// The length of the MD5 digest, in bytes.
     fn length(&self) -> usize {
         Self::LENGTH
     }
 
+    /// Update the MD5 digest using the given `data`.
     fn update(&mut self, data: &[u8]) {
         if !self.ctx.is_null() {
             unsafe {
@@ -43,6 +50,7 @@ impl Digest<{ MD5::LENGTH }> for MD5 {
         }
     }
 
+    /// Finalize the MD5 digest computation and return the result.
     fn digest(&mut self) -> [u8; MD5::LENGTH] {
         if !self.ctx.is_null() {
             let mut len = 0;
@@ -61,6 +69,7 @@ impl Digest<{ MD5::LENGTH }> for MD5 {
 }
 
 impl Drop for MD5 {
+    /// Clean up the OpenSSL context.
     fn drop(&mut self) {
         if !self.ctx.is_null() {
             unsafe { EVP_MD_CTX_free(self.ctx) };
