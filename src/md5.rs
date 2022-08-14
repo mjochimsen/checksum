@@ -4,14 +4,13 @@ use std::sync::Arc;
 
 use openssl_sys::{
     EVP_DigestFinal, EVP_DigestInit, EVP_DigestUpdate, EVP_MD_CTX_free,
-    EVP_MD_CTX_new, EVP_md5, EVP_MAX_MD_SIZE, EVP_MD, EVP_MD_CTX,
+    EVP_MD_CTX_new, EVP_md5, EVP_MAX_MD_SIZE, EVP_MD_CTX,
 };
 
 use crate::{Digest, DigestData, Generator};
 
 pub struct MD5 {
     ctx: *mut EVP_MD_CTX,
-    md5: *const EVP_MD,
     digest: [u8; Self::LENGTH],
 }
 
@@ -26,7 +25,6 @@ impl MD5 {
         unsafe { EVP_DigestInit(ctx, md5) };
         Self {
             ctx,
-            md5,
             digest: [0; Self::LENGTH],
         }
     }
@@ -38,8 +36,10 @@ impl Digest<{ MD5::LENGTH }> for MD5 {
     }
 
     fn update(&mut self, data: &[u8]) {
-        unsafe {
-            EVP_DigestUpdate(self.ctx, data.as_ptr().cast(), data.len());
+        if !self.ctx.is_null() {
+            unsafe {
+                EVP_DigestUpdate(self.ctx, data.as_ptr().cast(), data.len());
+            }
         }
     }
 
@@ -55,7 +55,6 @@ impl Digest<{ MD5::LENGTH }> for MD5 {
                 .copy_from_slice(&buffer[..Self::LENGTH]);
             unsafe { EVP_MD_CTX_free(self.ctx) };
             self.ctx = null_mut();
-            self.md5 = null_mut();
         }
         self.digest
     }
@@ -66,7 +65,6 @@ impl Drop for MD5 {
         if !self.ctx.is_null() {
             unsafe { EVP_MD_CTX_free(self.ctx) };
             self.ctx = null_mut();
-            self.md5 = null_mut();
         }
     }
 }
