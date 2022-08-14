@@ -32,7 +32,7 @@ impl MD5 {
     }
 }
 
-impl<'a> Digest<'a> for MD5 {
+impl Digest<{ MD5::LENGTH }> for MD5 {
     fn bit_length(&self) -> usize {
         Self::LENGTH
     }
@@ -43,7 +43,7 @@ impl<'a> Digest<'a> for MD5 {
         }
     }
 
-    fn digest(&'a mut self) -> &'a [u8] {
+    fn digest(&mut self) -> [u8; MD5::LENGTH] {
         if !self.ctx.is_null() {
             let mut len = 0;
             let mut buffer = [0u8; EVP_MAX_MD_SIZE as usize];
@@ -57,7 +57,7 @@ impl<'a> Digest<'a> for MD5 {
             self.ctx = null_mut();
             self.md5 = null_mut();
         }
-        &self.digest
+        self.digest
     }
 }
 
@@ -128,7 +128,7 @@ fn background_md5(
     tx_result: &mpsc::Sender<[u8; MD5::LENGTH]>,
 ) {
     let mut md5 = MD5::new();
-    let mut digest = [0; MD5::LENGTH];
+    let mut digest;
 
     loop {
         let msg = rx_input.recv();
@@ -136,7 +136,7 @@ fn background_md5(
         match msg {
             Ok(Message::Append(data)) => md5.update(&data),
             Ok(Message::Finish) => {
-                digest.copy_from_slice(md5.digest());
+                digest = md5.digest();
                 md5 = MD5::new();
                 tx_result.send(digest).unwrap();
             }
