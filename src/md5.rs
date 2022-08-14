@@ -36,11 +36,6 @@ impl MD5 {
 }
 
 impl Digest<{ MD5::LENGTH }> for MD5 {
-    /// The length of the MD5 digest, in bytes.
-    fn length(&self) -> usize {
-        Self::LENGTH
-    }
-
     /// Update the MD5 digest using the given `data`.
     fn update(&mut self, data: &[u8]) {
         if !self.ctx.is_null() {

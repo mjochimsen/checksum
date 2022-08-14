@@ -13,24 +13,24 @@ mod sha512;
 /// such as the 256-bit digest from the SHA-2 family of digests.
 pub trait Digest<const LEN: usize> {
     /// The number of bytes required to hold the digest.
-    fn length(&self) -> usize;
+    fn length(&self) -> usize {
+        LEN
+    }
 
-    /// Update the `Digest` with additional data. If called after the
+    /// Update the `Digest` with additional `data`. If called after the
     /// `digest()` method is called the results are indeterminiate, and
     /// may panic.
     fn update(&mut self, data: &[u8]);
 
-    /// Retrieve the digest data as a slice of `byte_length()` bytes.
-    /// After this method is called, the `update()` method may no longer
-    /// be used.
+    /// Retrieve the digest data as an array of `LEN` bytes. After this
+    /// method is called, the `update()` method may no longer be used.
     fn digest(&mut self) -> [u8; LEN];
 
-    /// A convenience metho which will return the digest as a hexadecimal
-    /// string. After this method is called the `update()` method may no
-    /// longer be used.
+    /// A convenience method which will return the digest as a lowercase
+    /// hexadecimal string. After this method is called the `update()`
+    /// method may no longer be used.
     fn digest_str(&mut self) -> String {
-        // let digest = self.digest();
-        let mut digest_str = String::with_capacity(self.length() * 2);
+        let mut digest_str = String::with_capacity(LEN * 2);
         for byte in self.digest() {
             let byte_str = format!("{:02x}", byte);
             digest_str.push_str(&byte_str);
