@@ -33,7 +33,7 @@ impl MD5 {
 }
 
 impl Digest<{ MD5::LENGTH }> for MD5 {
-    fn bit_length(&self) -> usize {
+    fn length(&self) -> usize {
         Self::LENGTH
     }
 
