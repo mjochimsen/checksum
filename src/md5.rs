@@ -8,13 +8,13 @@ use openssl_sys::{
 
 use crate::{DigestData, Generator};
 
-pub struct MD5 {
+pub struct BackgroundMD5 {
     tx_input: mpsc::SyncSender<Message>,
     rx_result: mpsc::Receiver<[u8; 16]>,
 }
 
-impl MD5 {
-    pub fn new() -> MD5 {
+impl BackgroundMD5 {
+    pub fn new() -> Self {
         use std::thread;
 
         let (tx_input, rx_input) = mpsc::sync_channel(4);
@@ -24,14 +24,14 @@ impl MD5 {
             background_md5(&rx_input, &tx_result);
         });
 
-        MD5 {
+        Self {
             tx_input,
             rx_result,
         }
     }
 }
 
-impl Generator for MD5 {
+impl Generator for BackgroundMD5 {
     fn append(&self, data: Arc<[u8]>) {
         self.tx_input
             .send(Message::Append(data))
@@ -132,7 +132,7 @@ mod tests {
 
     #[test]
     fn md5_empty() {
-        let md5 = MD5::new();
+        let md5 = BackgroundMD5::new();
 
         let digest = md5.result();
 
@@ -141,7 +141,7 @@ mod tests {
 
     #[test]
     fn md5_data() {
-        let md5 = MD5::new();
+        let md5 = BackgroundMD5::new();
 
         let data = Arc::from([0; 0x4000]);
         md5.append(data);
@@ -155,7 +155,7 @@ mod tests {
 
     #[test]
     fn md5_multiple() {
-        let md5 = MD5::new();
+        let md5 = BackgroundMD5::new();
 
         let digest = md5.result();
 

@@ -141,7 +141,7 @@ pub fn crc32() -> Box<dyn Generator> {
 
 #[must_use]
 pub fn md5() -> Box<dyn Generator> {
-    let md5 = md5::MD5::new();
+    let md5 = md5::BackgroundMD5::new();
     Box::new(md5)
 }
 
