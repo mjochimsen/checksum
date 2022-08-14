@@ -27,14 +27,15 @@ pub trait Digest<'a> {
     /// Retrieve the digest data as a slice of `byte_length()` bytes.
     /// After this method is called, the `update()` method may no longer
     /// be used. Doing so will result in indeterminate results.
-    fn digest(&mut self) -> &'a [u8];
+    fn digest(&'a mut self) -> &'a [u8];
 
     /// A convenience metho which will return the digest as a hexadecimal
     /// string. After this method is called the `update()` method may no
     /// longer be used. Doing so will result in indeterminate results.
-    fn digest_str(&mut self) -> String {
+    fn digest_str(&'a mut self) -> String {
+        let strlen = self.byte_length() * 2;
         let digest = self.digest();
-        let mut digest_str = String::with_capacity(self.byte_length() * 2);
+        let mut digest_str = String::with_capacity(strlen);
         for byte in digest {
             let byte_str = format!("{:02x}", byte);
             digest_str.push_str(&byte_str);
