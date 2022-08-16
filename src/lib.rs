@@ -3,11 +3,14 @@
 use std::fmt;
 use std::sync::Arc;
 
+mod background;
 mod crc32;
 mod md5;
 mod rmd160;
 mod sha256;
 mod sha512;
+
+pub use background::Background;
 
 /// The `Digest` trait describes a common interface to a digest algorithm,
 /// such as the 256-bit digest from the SHA-2 family of digests.

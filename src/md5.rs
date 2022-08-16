@@ -1,4 +1,3 @@
-use std::sync::mpsc;
 use std::sync::Arc;
 
 use openssl_sys::{
@@ -6,7 +5,7 @@ use openssl_sys::{
     EVP_MD_CTX_new, EVP_md5, EVP_MAX_MD_SIZE, EVP_MD, EVP_MD_CTX,
 };
 
-use crate::{Digest, DigestData, Generator};
+use crate::{Background, Digest, DigestData, Generator};
 
 /// A structure used to generated a MD5 digest.
 pub struct MD5 {
@@ -64,73 +63,24 @@ impl Drop for MD5 {
 }
 
 pub struct BackgroundMD5 {
-    tx_input: mpsc::SyncSender<Message>,
-    rx_result: mpsc::Receiver<[u8; MD5::LENGTH]>,
+    worker: Background<{ MD5::LENGTH }>,
 }
 
 impl BackgroundMD5 {
     pub fn new() -> Self {
-        use std::thread;
-
-        let (tx_input, rx_input) = mpsc::sync_channel(4);
-        let (tx_result, rx_result) = mpsc::channel();
-
-        thread::spawn(move || {
-            background_md5(&rx_input, &tx_result);
-        });
-
         Self {
-            tx_input,
-            rx_result,
+            worker: Background::new(MD5::new),
         }
     }
 }
 
 impl Generator for BackgroundMD5 {
     fn append(&self, data: Arc<[u8]>) {
-        self.tx_input
-            .send(Message::Append(data))
-            .expect("unexpected error appending to digest");
+        self.worker.update(data);
     }
 
     fn result(&self) -> DigestData {
-        use std::time::Duration;
-
-        self.tx_input
-            .send(Message::Finish)
-            .expect("unexpected error finishing digest");
-
-        let timeout = Duration::new(5, 0);
-        let result = self
-            .rx_result
-            .recv_timeout(timeout)
-            .expect("unable to retrieve digest value");
-
-        DigestData::MD5(result)
-    }
-}
-
-enum Message {
-    Append(Arc<[u8]>),
-    Finish,
-}
-
-fn background_md5(
-    rx_input: &mpsc::Receiver<Message>,
-    tx_result: &mpsc::Sender<[u8; MD5::LENGTH]>,
-) {
-    let mut md5 = MD5::new();
-
-    loop {
-        let msg = rx_input.recv();
-
-        match msg {
-            Ok(Message::Append(data)) => md5.update(&data),
-            Ok(Message::Finish) => {
-                tx_result.send(md5.finish()).unwrap();
-            }
-            Err(_) => break,
-        }
+        DigestData::MD5(self.worker.finish())
     }
 }
 
