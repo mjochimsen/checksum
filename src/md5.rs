@@ -1,10 +1,9 @@
-use std::ptr::null_mut;
 use std::sync::mpsc;
 use std::sync::Arc;
 
 use openssl_sys::{
     EVP_DigestFinal, EVP_DigestInit, EVP_DigestUpdate, EVP_MD_CTX_free,
-    EVP_MD_CTX_new, EVP_md5, EVP_MAX_MD_SIZE, EVP_MD_CTX,
+    EVP_MD_CTX_new, EVP_md5, EVP_MAX_MD_SIZE, EVP_MD, EVP_MD_CTX,
 };
 
 use crate::{Digest, DigestData, Generator};
@@ -13,8 +12,8 @@ use crate::{Digest, DigestData, Generator};
 pub struct MD5 {
     /// The OpenSSL context used to generate the digest.
     ctx: *mut EVP_MD_CTX,
-    /// The digest data (once the digest is fully computed).
-    digest: [u8; Self::LENGTH],
+    /// The OpenSSL MD5 digest algorithm.
+    md5: *const EVP_MD,
 }
 
 impl MD5 {
@@ -27,49 +26,40 @@ impl MD5 {
         assert!(!ctx.is_null());
         let md5 = unsafe { EVP_md5() };
         assert!(!md5.is_null());
-        unsafe { EVP_DigestInit(ctx, md5) };
-        Self {
-            ctx,
-            digest: [0; Self::LENGTH],
-        }
+        let this = Self { ctx, md5 };
+        this.reset();
+        this
+    }
+
+    fn reset(&self) {
+        unsafe { EVP_DigestInit(self.ctx, self.md5) };
     }
 }
 
-impl Digest<{ MD5::LENGTH }> for MD5 {
+impl Digest<{ Self::LENGTH }> for MD5 {
     /// Update the MD5 digest using the given `data`.
     fn update(&mut self, data: &[u8]) {
-        if !self.ctx.is_null() {
-            unsafe {
-                EVP_DigestUpdate(self.ctx, data.as_ptr().cast(), data.len());
-            }
+        unsafe {
+            EVP_DigestUpdate(self.ctx, data.as_ptr().cast(), data.len());
         }
     }
 
-    /// Finalize the MD5 digest computation and return the result.
-    fn digest(&mut self) -> [u8; MD5::LENGTH] {
-        if !self.ctx.is_null() {
-            let mut len = 0;
-            let mut buffer = [0u8; EVP_MAX_MD_SIZE as usize];
-            unsafe {
-                EVP_DigestFinal(self.ctx, buffer.as_mut_ptr(), &mut len)
-            };
-            assert!(Self::LENGTH == len as usize);
-            self.digest[..Self::LENGTH]
-                .copy_from_slice(&buffer[..Self::LENGTH]);
-            unsafe { EVP_MD_CTX_free(self.ctx) };
-            self.ctx = null_mut();
-        }
-        self.digest
+    /// Finalize the MD5 digest computation and return the result. The
+    /// OpenSSL context is reset so that it can be reused.
+    fn finish(&mut self) -> [u8; Self::LENGTH] {
+        let mut len = 0;
+        let mut buffer = [0u8; EVP_MAX_MD_SIZE as usize];
+        unsafe { EVP_DigestFinal(self.ctx, buffer.as_mut_ptr(), &mut len) };
+        assert!(Self::LENGTH == len as usize);
+        self.reset();
+        buffer[..Self::LENGTH].try_into().unwrap()
     }
 }
 
 impl Drop for MD5 {
     /// Clean up the OpenSSL context.
     fn drop(&mut self) {
-        if !self.ctx.is_null() {
-            unsafe { EVP_MD_CTX_free(self.ctx) };
-            self.ctx = null_mut();
-        }
+        unsafe { EVP_MD_CTX_free(self.ctx) };
     }
 }
 
@@ -130,7 +120,6 @@ fn background_md5(
     tx_result: &mpsc::Sender<[u8; MD5::LENGTH]>,
 ) {
     let mut md5 = MD5::new();
-    let mut digest;
 
     loop {
         let msg = rx_input.recv();
@@ -138,9 +127,7 @@ fn background_md5(
         match msg {
             Ok(Message::Append(data)) => md5.update(&data),
             Ok(Message::Finish) => {
-                digest = md5.digest();
-                md5 = MD5::new();
-                tx_result.send(digest).unwrap();
+                tx_result.send(md5.finish()).unwrap();
             }
             Err(_) => break,
         }
@@ -156,17 +143,9 @@ mod tests {
     fn md5_empty() {
         let mut md5 = MD5::new();
 
-        let digest = md5.digest();
+        let digest = md5.finish();
 
-        if let DigestData::MD5(expected) = MD5_ZERO_0 {
-            assert_eq!(digest, expected);
-        } else {
-            assert!(
-                false,
-                "unexpected value for MD5_ZERO_0 ({:?})",
-                MD5_ZERO_0
-            );
-        }
+        assert_eq!(DigestData::MD5(digest), MD5_ZERO_0);
     }
 
     #[test]
@@ -176,17 +155,31 @@ mod tests {
         md5.update(&[0; 0x4000]);
         md5.update(&[0; 0x0d]);
 
-        let digest = md5.digest();
+        let digest = md5.finish();
 
-        if let DigestData::MD5(expected) = MD5_ZERO_400D {
-            assert_eq!(digest, expected);
-        } else {
-            assert!(
-                false,
-                "unexpected value for MD5_ZERO_400D ({:?})",
-                MD5_ZERO_400D
-            );
-        }
+        assert_eq!(DigestData::MD5(digest), MD5_ZERO_400D);
+    }
+
+    #[test]
+    fn md5_multiple() {
+        let mut md5 = MD5::new();
+
+        let digest = md5.finish();
+
+        assert_eq!(DigestData::MD5(digest), MD5_ZERO_0);
+
+        let data = [0; 0x4000];
+        md5.update(&data);
+        let data = [0; 0x0d];
+        md5.update(&data);
+
+        let digest = md5.finish();
+
+        assert_eq!(DigestData::MD5(digest), MD5_ZERO_400D);
+
+        let digest = md5.finish();
+
+        assert_eq!(DigestData::MD5(digest), MD5_ZERO_0);
     }
 
     #[test]

@@ -17,26 +17,26 @@ pub trait Digest<const LEN: usize> {
         LEN
     }
 
-    /// Update the `Digest` with additional `data`. If called after the
-    /// `digest()` method is called the results are indeterminiate, and
-    /// may panic.
+    /// Update the `Digest` with additional `data`.
     fn update(&mut self, data: &[u8]);
 
-    /// Retrieve the digest data as an array of `LEN` bytes. After this
-    /// method is called, the `update()` method may no longer be used.
-    fn digest(&mut self) -> [u8; LEN];
+    /// Finish computing the digest and return the computed value. The
+    /// `Digest` implementor should return itself to its initial state
+    /// after calling this method, so that the next call to `update()`
+    /// will work as though no data had been received.
+    fn finish(&mut self) -> [u8; LEN];
+}
 
-    /// A convenience method which will return the digest as a lowercase
-    /// hexadecimal string. After this method is called the `update()`
-    /// method may no longer be used.
-    fn digest_str(&mut self) -> String {
-        let mut digest_str = String::with_capacity(LEN * 2);
-        for byte in self.digest() {
-            let byte_str = format!("{:02x}", byte);
-            digest_str.push_str(&byte_str);
-        }
-        digest_str
+/// A convenience function which will convert a binary digest to a
+/// lowercase hexadecimal string.
+#[must_use]
+pub fn digest_str(digest: &[u8]) -> String {
+    let mut digest_str = String::with_capacity(digest.len() * 2);
+    for byte in digest {
+        let byte_str = format!("{:02x}", byte);
+        digest_str.push_str(&byte_str);
     }
+    digest_str
 }
 
 #[derive(Clone, Copy, Eq)]
