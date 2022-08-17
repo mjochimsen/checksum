@@ -115,59 +115,37 @@ enum Message {
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::digest::{count, xor};
+    use crate::test_digests;
 
-    struct Null {
-        c: u8,
-    }
-
-    impl Null {
-        fn new() -> Self {
-            Self { c: 0 }
-        }
-    }
-
-    impl Digest<1> for Null {
-        fn update(&mut self, _: &[u8]) {
-            self.c += 1;
-        }
-        fn finish(&mut self) -> [u8; 1] {
-            let c = self.c;
-            self.c = 0;
-            [c; 1]
-        }
+    #[test]
+    fn background_count_empty() {
+        let bg = Background::new(count::Count::new);
+        assert_eq!(bg.finish(), count::EMPTY);
     }
 
     #[test]
-    fn background_empty() {
-        let bg = Background::new(Null::new);
-        assert_eq!(bg.finish(), [0; 1]);
+    fn background_count_zero() {
+        let bg = Background::new(count::Count::new);
+        bg.update(Arc::from([0; 0x4000]));
+        bg.update(Arc::from([0; 0x0d]));
+        assert_eq!(bg.finish(), count::ZERO_400D);
     }
 
     #[test]
-    fn background_data() {
-        let bg = Background::new(Null::new);
-
-        let data = Arc::from([0; 0x4000]);
-        bg.update(data);
-        let data = Arc::from([0; 0x0d]);
-        bg.update(data);
-
-        assert_eq!(bg.finish(), [2; 1]);
+    fn background_xor_random() {
+        let bg = Background::new(xor::XOR::new);
+        bg.update(Arc::from(test_digests::RANDOM_11171));
+        assert_eq!(bg.finish(), xor::RANDOM_11171);
     }
 
     #[test]
-    fn background_md5_multiple() {
-        let bg = Background::new(Null::new);
-
-        assert_eq!(bg.finish(), [0; 1]);
-
-        let data = Arc::from([0; 0x4000]);
-        bg.update(data);
-        let data = Arc::from([0; 0x0d]);
-        bg.update(data);
-
-        assert_eq!(bg.finish(), [2; 1]);
-
-        assert_eq!(bg.finish(), [0; 1]);
+    fn background_count_multiple() {
+        let bg = Background::new(count::Count::new);
+        assert_eq!(bg.finish(), count::EMPTY);
+        bg.update(Arc::from(test_digests::ZERO_400D));
+        assert_eq!(bg.finish(), count::ZERO_400D);
+        bg.update(Arc::from(test_digests::RANDOM_11171));
+        assert_eq!(bg.finish(), count::RANDOM_11171);
     }
 }

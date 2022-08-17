@@ -3,44 +3,17 @@
 use std::fmt;
 use std::sync::Arc;
 
+mod digest;
+pub use digest::Digest;
+
 mod background;
+pub use background::Background;
+
 mod crc32;
 mod md5;
 mod rmd160;
 mod sha256;
 mod sha512;
-
-pub use background::Background;
-
-/// The `Digest` trait describes a common interface to a digest algorithm,
-/// such as the 256-bit digest from the SHA-2 family of digests.
-pub trait Digest<const LEN: usize> {
-    /// The number of bytes required to hold the digest.
-    fn length(&self) -> usize {
-        LEN
-    }
-
-    /// Update the `Digest` with additional `data`.
-    fn update(&mut self, data: &[u8]);
-
-    /// Finish computing the digest and return the computed value. The
-    /// `Digest` implementor should return itself to its initial state
-    /// after calling this method, so that the next call to `update()`
-    /// will work as though no data had been received.
-    fn finish(&mut self) -> [u8; LEN];
-}
-
-/// A convenience function which will convert a binary digest to a
-/// lowercase hexadecimal string.
-#[must_use]
-pub fn digest_str(digest: &[u8]) -> String {
-    let mut digest_str = String::with_capacity(digest.len() * 2);
-    for byte in digest {
-        let byte_str = format!("{:02x}", byte);
-        digest_str.push_str(&byte_str);
-    }
-    digest_str
-}
 
 #[derive(Clone, Copy, Eq)]
 pub enum DigestData {
