@@ -621,7 +621,7 @@ mod tests {
 
     #[test]
     fn digest_zero() {
-        let zero = fs::File::open(test_data("zero-11171")).unwrap();
+        let zero = fs::File::open(test_data("zero-400d")).unwrap();
         let generators = generators();
 
         let digests = digest_file(zero, &generators).unwrap();
@@ -629,11 +629,11 @@ mod tests {
         assert_eq!(
             digests,
             vec![
-                test_digests::crc32::ZERO_11171,
-                test_digests::md5::ZERO_11171,
-                test_digests::sha256::ZERO_11171,
-                test_digests::sha512::ZERO_11171,
-                test_digests::rmd160::ZERO_11171
+                test_digests::crc32::ZERO_400D,
+                test_digests::md5::ZERO_400D,
+                test_digests::sha256::ZERO_400D,
+                test_digests::sha512::ZERO_400D,
+                test_digests::rmd160::ZERO_400D
             ]
         );
     }

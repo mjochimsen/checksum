@@ -61,7 +61,7 @@ fn checksum_stdin() {
 fn checksum_files() {
     let mut child = run_checksum(
         &["--rmd160", "--md5", "--crc32"],
-        &["zero-11171", "random-11171"],
+        &["zero-400d", "random-11171"],
     );
 
     let status =
@@ -71,9 +71,9 @@ fn checksum_files() {
     let lines =
         child_readlines(&mut child).expect("error reading checksum stdout");
     assert_eq!(lines, [
-        "RMD160 (src/test_digests/zero-11171) = f2288b605a62a21a264abffdc1d036ec45ef1d6c",
-        "MD5 (src/test_digests/zero-11171) = 41a22d1ee789decbfbd4924ec21e53c9",
-        "CRC32 (src/test_digests/zero-11171) = 5dc1d8ba",
+        "RMD160 (src/test_digests/zero-400d) = 81e44bc5416e987e7cdba7c8cd2935ecf15bddcd",
+        "MD5 (src/test_digests/zero-400d) = 96f64e179f777e6eda0caa2d879356c9",
+        "CRC32 (src/test_digests/zero-400d) = 26a348bb",
         "RMD160 (src/test_digests/random-11171) = cb4f956b435d16bf03bad5607ed2e06af9eefd7b",
         "MD5 (src/test_digests/random-11171) = ff8ae3cf944cdddea7191c906afe0c81",
         "CRC32 (src/test_digests/random-11171) = ff70a8ee",
