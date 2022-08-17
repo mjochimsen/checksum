@@ -539,15 +539,15 @@ mod tests {
         let generators = super::create_generators(&digests);
         assert_eq!(generators.len(), 5);
         let digest = &generators[0];
-        assert_eq!(digest.result(), MD5_ZERO_0);
+        assert_eq!(digest.result(), test_digests::md5::EMPTY);
         let digest = &generators[1];
-        assert_eq!(digest.result(), SHA256_ZERO_0);
+        assert_eq!(digest.result(), test_digests::sha256::EMPTY);
         let digest = &generators[2];
-        assert_eq!(digest.result(), SHA512_ZERO_0);
+        assert_eq!(digest.result(), test_digests::sha512::EMPTY);
         let digest = &generators[3];
-        assert_eq!(digest.result(), RMD160_ZERO_0);
+        assert_eq!(digest.result(), test_digests::rmd160::EMPTY);
         let digest = &generators[4];
-        assert_eq!(digest.result(), CRC32_ZERO_0);
+        assert_eq!(digest.result(), test_digests::crc32::EMPTY);
     }
 
     #[test]
@@ -565,11 +565,11 @@ mod tests {
         assert_eq!(
             digests,
             vec![
-                CRC32_ZERO_400D,
-                MD5_ZERO_400D,
-                SHA256_ZERO_400D,
-                SHA512_ZERO_400D,
-                RMD160_ZERO_400D
+                test_digests::crc32::ZERO_400D,
+                test_digests::md5::ZERO_400D,
+                test_digests::sha256::ZERO_400D,
+                test_digests::sha512::ZERO_400D,
+                test_digests::rmd160::ZERO_400D
             ]
         );
     }
@@ -591,18 +591,18 @@ mod tests {
         assert_eq!(
             digests,
             vec![
-                CRC32_ZERO_400D,
-                MD5_ZERO_400D,
-                SHA256_ZERO_400D,
-                SHA512_ZERO_400D,
-                RMD160_ZERO_400D
+                test_digests::crc32::ZERO_400D,
+                test_digests::md5::ZERO_400D,
+                test_digests::sha256::ZERO_400D,
+                test_digests::sha512::ZERO_400D,
+                test_digests::rmd160::ZERO_400D
             ]
         );
     }
 
     #[test]
     fn digest_empty() {
-        let empty = fs::File::open(test_data("zero-0")).unwrap();
+        let empty = fs::File::open(test_data("empty")).unwrap();
         let generators = generators();
 
         let digests = digest_file(empty, &generators).unwrap();
@@ -610,11 +610,11 @@ mod tests {
         assert_eq!(
             digests,
             vec![
-                CRC32_ZERO_0,
-                MD5_ZERO_0,
-                SHA256_ZERO_0,
-                SHA512_ZERO_0,
-                RMD160_ZERO_0
+                test_digests::crc32::EMPTY,
+                test_digests::md5::EMPTY,
+                test_digests::sha256::EMPTY,
+                test_digests::sha512::EMPTY,
+                test_digests::rmd160::EMPTY
             ]
         );
     }
@@ -629,11 +629,11 @@ mod tests {
         assert_eq!(
             digests,
             vec![
-                CRC32_ZERO_11171,
-                MD5_ZERO_11171,
-                SHA256_ZERO_11171,
-                SHA512_ZERO_11171,
-                RMD160_ZERO_11171
+                test_digests::crc32::ZERO_11171,
+                test_digests::md5::ZERO_11171,
+                test_digests::sha256::ZERO_11171,
+                test_digests::sha512::ZERO_11171,
+                test_digests::rmd160::ZERO_11171
             ]
         );
     }
@@ -648,11 +648,11 @@ mod tests {
         assert_eq!(
             digests,
             vec![
-                CRC32_RANDOM_11171,
-                MD5_RANDOM_11171,
-                SHA256_RANDOM_11171,
-                SHA512_RANDOM_11171,
-                RMD160_RANDOM_11171
+                test_digests::crc32::RANDOM_11171,
+                test_digests::md5::RANDOM_11171,
+                test_digests::sha256::RANDOM_11171,
+                test_digests::sha512::RANDOM_11171,
+                test_digests::rmd160::RANDOM_11171
             ]
         );
     }

@@ -128,8 +128,8 @@ impl Drop for Context {
 
 #[cfg(test)]
 mod tests {
-    use super::super::test_digests::*;
     use super::*;
+    use crate::test_digests;
 
     #[test]
     fn sha256_empty() {
@@ -137,7 +137,7 @@ mod tests {
 
         let digest = sha256.result();
 
-        assert_eq!(digest, SHA256_ZERO_0);
+        assert_eq!(digest, test_digests::sha256::EMPTY);
     }
 
     #[test]
@@ -151,7 +151,7 @@ mod tests {
 
         let digest = sha256.result();
 
-        assert_eq!(digest, SHA256_ZERO_400D);
+        assert_eq!(digest, test_digests::sha256::ZERO_400D);
     }
 
     #[test]
@@ -160,7 +160,7 @@ mod tests {
 
         let digest = sha256.result();
 
-        assert_eq!(digest, SHA256_ZERO_0);
+        assert_eq!(digest, test_digests::sha256::EMPTY);
 
         let data = Arc::from([0; 0x4000]);
         sha256.append(data);
@@ -169,10 +169,10 @@ mod tests {
 
         let digest = sha256.result();
 
-        assert_eq!(digest, SHA256_ZERO_400D);
+        assert_eq!(digest, test_digests::sha256::ZERO_400D);
 
         let digest = sha256.result();
 
-        assert_eq!(digest, SHA256_ZERO_0);
+        assert_eq!(digest, test_digests::sha256::EMPTY);
     }
 }

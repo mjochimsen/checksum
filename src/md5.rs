@@ -86,8 +86,8 @@ impl Generator for BackgroundMD5 {
 
 #[cfg(test)]
 mod tests {
-    use super::super::test_digests::*;
     use super::*;
+    use crate::test_digests;
 
     #[test]
     fn md5_empty() {
@@ -95,7 +95,7 @@ mod tests {
 
         let digest = md5.finish();
 
-        assert_eq!(DigestData::MD5(digest), MD5_ZERO_0);
+        assert_eq!(DigestData::MD5(digest), test_digests::md5::EMPTY);
     }
 
     #[test]
@@ -107,7 +107,7 @@ mod tests {
 
         let digest = md5.finish();
 
-        assert_eq!(DigestData::MD5(digest), MD5_ZERO_400D);
+        assert_eq!(DigestData::MD5(digest), test_digests::md5::ZERO_400D);
     }
 
     #[test]
@@ -116,7 +116,7 @@ mod tests {
 
         let digest = md5.finish();
 
-        assert_eq!(DigestData::MD5(digest), MD5_ZERO_0);
+        assert_eq!(DigestData::MD5(digest), test_digests::md5::EMPTY);
 
         let data = [0; 0x4000];
         md5.update(&data);
@@ -125,11 +125,11 @@ mod tests {
 
         let digest = md5.finish();
 
-        assert_eq!(DigestData::MD5(digest), MD5_ZERO_400D);
+        assert_eq!(DigestData::MD5(digest), test_digests::md5::ZERO_400D);
 
         let digest = md5.finish();
 
-        assert_eq!(DigestData::MD5(digest), MD5_ZERO_0);
+        assert_eq!(DigestData::MD5(digest), test_digests::md5::EMPTY);
     }
 
     #[test]
@@ -138,7 +138,7 @@ mod tests {
 
         let digest = md5.result();
 
-        assert_eq!(digest, MD5_ZERO_0);
+        assert_eq!(digest, test_digests::md5::EMPTY);
     }
 
     #[test]
@@ -152,7 +152,7 @@ mod tests {
 
         let digest = md5.result();
 
-        assert_eq!(digest, MD5_ZERO_400D);
+        assert_eq!(digest, test_digests::md5::ZERO_400D);
     }
 
     #[test]
@@ -161,7 +161,7 @@ mod tests {
 
         let digest = md5.result();
 
-        assert_eq!(digest, MD5_ZERO_0);
+        assert_eq!(digest, test_digests::md5::EMPTY);
 
         let data = Arc::from([0; 0x4000]);
         md5.append(data);
@@ -170,10 +170,10 @@ mod tests {
 
         let digest = md5.result();
 
-        assert_eq!(digest, MD5_ZERO_400D);
+        assert_eq!(digest, test_digests::md5::ZERO_400D);
 
         let digest = md5.result();
 
-        assert_eq!(digest, MD5_ZERO_0);
+        assert_eq!(digest, test_digests::md5::EMPTY);
     }
 }

@@ -145,7 +145,7 @@ fn checksum_missing_file() {
 fn checksum_missing_and_present_files() {
     let mut child = run_checksum(
         &["--rmd160", "--md5", "--crc32"],
-        &["zero-0", "missing", "zero-400d"],
+        &["empty", "missing", "zero-400d"],
     );
 
     let status =
@@ -155,9 +155,9 @@ fn checksum_missing_and_present_files() {
     let lines =
         child_readlines(&mut child).expect("error reading checksum stdout");
     assert_eq!(lines, [
-        "RMD160 (src/test_digests/zero-0) = 9c1185a5c5e9fc54612808977ee8f548b2258d31",
-        "MD5 (src/test_digests/zero-0) = d41d8cd98f00b204e9800998ecf8427e",
-        "CRC32 (src/test_digests/zero-0) = 00000000",
+        "RMD160 (src/test_digests/empty) = 9c1185a5c5e9fc54612808977ee8f548b2258d31",
+        "MD5 (src/test_digests/empty) = d41d8cd98f00b204e9800998ecf8427e",
+        "CRC32 (src/test_digests/empty) = 00000000",
         "RMD160 (src/test_digests/zero-400d) = 81e44bc5416e987e7cdba7c8cd2935ecf15bddcd",
         "MD5 (src/test_digests/zero-400d) = 96f64e179f777e6eda0caa2d879356c9",
         "CRC32 (src/test_digests/zero-400d) = 26a348bb",

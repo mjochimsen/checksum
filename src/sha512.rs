@@ -128,8 +128,8 @@ impl Drop for Context {
 
 #[cfg(test)]
 mod tests {
-    use super::super::test_digests::*;
     use super::*;
+    use crate::test_digests;
 
     #[test]
     fn sha512_empty() {
@@ -137,7 +137,7 @@ mod tests {
 
         let digest = sha512.result();
 
-        assert_eq!(digest, SHA512_ZERO_0);
+        assert_eq!(digest, test_digests::sha512::EMPTY);
     }
 
     #[test]
@@ -151,7 +151,7 @@ mod tests {
 
         let digest = sha512.result();
 
-        assert_eq!(digest, SHA512_ZERO_400D);
+        assert_eq!(digest, test_digests::sha512::ZERO_400D);
     }
 
     #[test]
@@ -160,7 +160,7 @@ mod tests {
 
         let digest = sha512.result();
 
-        assert_eq!(digest, SHA512_ZERO_0);
+        assert_eq!(digest, test_digests::sha512::EMPTY);
 
         let data = Arc::from([0; 0x4000]);
         sha512.append(data);
@@ -169,10 +169,10 @@ mod tests {
 
         let digest = sha512.result();
 
-        assert_eq!(digest, SHA512_ZERO_400D);
+        assert_eq!(digest, test_digests::sha512::ZERO_400D);
 
         let digest = sha512.result();
 
-        assert_eq!(digest, SHA512_ZERO_0);
+        assert_eq!(digest, test_digests::sha512::EMPTY);
     }
 }
