@@ -323,7 +323,6 @@ pub mod test_digests;
 mod tests {
     use super::*;
     use std::process;
-    use test_digests::*;
 
     #[test]
     fn parse_argument() {
@@ -369,7 +368,7 @@ mod tests {
         let config = Config::new(cli.iter()).unwrap();
 
         assert_eq!(config.cmd, "checksum");
-        assert_eq!(config.help, true);
+        assert!(config.help);
         assert_eq!(config.paths.len(), 0);
         assert_eq!(config.digests.len(), 0);
     }
@@ -383,7 +382,7 @@ mod tests {
         let config = Config::new(cli.iter()).unwrap();
 
         assert_eq!(config.cmd, "checksum");
-        assert_eq!(config.help, false);
+        assert!(!config.help);
         assert_eq!(config.paths.len(), 0);
         assert_eq!(
             config.digests,
@@ -403,7 +402,7 @@ mod tests {
         let config = Config::new(cli.iter()).unwrap();
 
         assert_eq!(config.cmd, "checksum");
-        assert_eq!(config.help, false);
+        assert!(!config.help);
         assert_eq!(config.paths.len(), 0);
         assert_eq!(
             config.digests,
@@ -422,7 +421,7 @@ mod tests {
         let config = Config::new(cli.iter()).unwrap();
 
         assert_eq!(config.cmd, "checksum");
-        assert_eq!(config.help, false);
+        assert!(!config.help);
         assert_eq!(
             config.digests,
             vec![
@@ -553,7 +552,7 @@ mod tests {
     #[test]
     fn update_digests() {
         let generators = generators();
-        let data = ZERO_400D;
+        let data = test_digests::ZERO_400D;
 
         super::update_digests(&generators, &data);
 

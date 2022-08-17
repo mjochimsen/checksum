@@ -175,7 +175,7 @@ fn run_checksum(flags: &[&str], files: &[&str]) -> process::Child {
         path::PathBuf::from_iter(&["target", "debug", "checksum"]);
     let mut cmd = process::Command::new(&checksum_path);
     cmd.args(flags);
-    let paths = files.into_iter().map(|filename| {
+    let paths = files.iter().map(|filename| {
         path::PathBuf::from_iter(&["src", "test_digests", filename])
     });
     cmd.args(paths);

@@ -94,8 +94,10 @@ mod tests {
     #[test]
     fn zlib_crc32() {
         let data = [0; 32];
-        let crc = unsafe { crc32(0, data.as_ptr(), data.len() as u32) };
-        assert_eq!(crc, 0x190a55ad);
+        let crc = unsafe {
+            crc32(0, data.as_ptr(), data.len().try_into().unwrap())
+        };
+        assert_eq!(crc, 0x190a_55ad);
     }
 
     #[test]

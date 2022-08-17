@@ -66,6 +66,7 @@ pub mod xor {
 
     /// A trivial digest algorithm which just computes a running XOR of the
     /// bytes. This is intended to be used for testing purposes.
+    #[allow(clippy::upper_case_acronyms)]
     pub struct XOR {
         d: u8,
     }
