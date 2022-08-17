@@ -5,9 +5,12 @@ pub const RANDOM_11171: [u8; 0x11171] = *include_bytes!("random-11171");
 pub mod crc32 {
     use crate::DigestData;
 
-    pub const EMPTY: DigestData = DigestData::CRC32(0x00000000);
-    pub const ZERO_400D: DigestData = DigestData::CRC32(0x26a348bb);
-    pub const RANDOM_11171: DigestData = DigestData::CRC32(0xff70a8ee);
+    pub const EMPTY: DigestData =
+        DigestData::CRC32(*include_bytes!("empty.crc32"));
+    pub const ZERO_400D: DigestData =
+        DigestData::CRC32(*include_bytes!("zero-400d.crc32"));
+    pub const RANDOM_11171: DigestData =
+        DigestData::CRC32(*include_bytes!("random-11171.crc32"));
 }
 
 pub mod md5 {

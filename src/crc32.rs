@@ -6,7 +6,7 @@ use libz_sys::crc32;
 
 pub struct CRC32 {
     tx_input: mpsc::SyncSender<Message>,
-    rx_result: mpsc::Receiver<u32>,
+    rx_result: mpsc::Receiver<[u8; 4]>,
 }
 
 impl CRC32 {
@@ -58,7 +58,7 @@ enum Message {
 
 fn background_crc32(
     rx_input: &mpsc::Receiver<Message>,
-    tx_result: &mpsc::Sender<u32>,
+    tx_result: &mpsc::Sender<[u8; 4]>,
 ) {
     let mut crc: u32 = 0;
 
@@ -78,7 +78,7 @@ fn background_crc32(
                     .expect("unexpected CRC32 value > u32::MAX");
             }
             Ok(Message::Finish) => {
-                tx_result.send(crc).unwrap();
+                tx_result.send(crc.to_be_bytes()).unwrap();
                 crc = 0;
             }
             Err(_) => break,

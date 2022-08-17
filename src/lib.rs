@@ -17,7 +17,7 @@ mod sha512;
 
 #[derive(Clone, Copy, Eq)]
 pub enum DigestData {
-    CRC32(u32),
+    CRC32([u8; 4]),
     MD5([u8; 16]),
     SHA256([u8; 32]),
     SHA512([u8; 64]),
@@ -50,7 +50,7 @@ impl fmt::Debug for DigestData {
         match self {
             DigestData::CRC32(digest) => {
                 write!(f, "CRC32(")?;
-                format_u32(f, *digest)?;
+                format_bytes(f, digest)?;
                 write!(f, ")")
             }
             DigestData::MD5(digest) => {
@@ -80,17 +80,13 @@ impl fmt::Debug for DigestData {
 impl fmt::Display for DigestData {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            DigestData::CRC32(digest) => format_u32(f, *digest),
+            DigestData::CRC32(digest) => format_bytes(f, digest),
             DigestData::MD5(digest) => format_bytes(f, digest),
             DigestData::SHA256(digest) => format_bytes(f, digest),
             DigestData::SHA512(digest) => format_bytes(f, digest),
             DigestData::RMD160(digest) => format_bytes(f, digest),
         }
     }
-}
-
-fn format_u32(f: &mut fmt::Formatter, value: u32) -> fmt::Result {
-    write!(f, "{:08x}", value)
 }
 
 fn format_bytes(f: &mut fmt::Formatter, bytes: &[u8]) -> fmt::Result {
