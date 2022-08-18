@@ -106,12 +106,12 @@ impl Generator for BackgroundMD5 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::test_digests;
+    use crate::fixtures;
 
     #[test]
     fn md5_empty() {
         let mut md5 = MD5::new();
-        assert_eq!(md5.finish(), test_digests::md5::EMPTY);
+        assert_eq!(md5.finish(), fixtures::md5::EMPTY);
     }
 
     #[test]
@@ -119,39 +119,36 @@ mod tests {
         let mut md5 = MD5::new();
         md5.update(&[0; 0x4000]);
         md5.update(&[0; 0x0d]);
-        assert_eq!(md5.finish(), test_digests::md5::ZERO_400D);
+        assert_eq!(md5.finish(), fixtures::md5::ZERO_400D);
     }
 
     #[test]
     fn md5_random() {
         let mut md5 = MD5::new();
-        md5.update(&test_digests::RANDOM_11171);
-        assert_eq!(md5.finish(), test_digests::md5::RANDOM_11171);
+        md5.update(&fixtures::RANDOM_11171);
+        assert_eq!(md5.finish(), fixtures::md5::RANDOM_11171);
     }
 
     #[test]
     fn md5_multiple() {
         let mut md5 = MD5::new();
-        assert_eq!(md5.finish(), test_digests::md5::EMPTY);
-        md5.update(&test_digests::ZERO_400D);
-        assert_eq!(md5.finish(), test_digests::md5::ZERO_400D);
-        md5.update(&test_digests::RANDOM_11171);
-        assert_eq!(md5.finish(), test_digests::md5::RANDOM_11171);
+        assert_eq!(md5.finish(), fixtures::md5::EMPTY);
+        md5.update(&fixtures::ZERO_400D);
+        assert_eq!(md5.finish(), fixtures::md5::ZERO_400D);
+        md5.update(&fixtures::RANDOM_11171);
+        assert_eq!(md5.finish(), fixtures::md5::RANDOM_11171);
     }
 
     #[test]
     fn background_md5() {
         let md5 = BackgroundMD5::new();
-        assert_eq!(md5.result(), DigestData::MD5(test_digests::md5::EMPTY));
-        md5.append(Arc::from(test_digests::ZERO_400D));
+        assert_eq!(md5.result(), DigestData::MD5(fixtures::md5::EMPTY));
+        md5.append(Arc::from(fixtures::ZERO_400D));
+        assert_eq!(md5.result(), DigestData::MD5(fixtures::md5::ZERO_400D));
+        md5.append(Arc::from(fixtures::RANDOM_11171));
         assert_eq!(
             md5.result(),
-            DigestData::MD5(test_digests::md5::ZERO_400D)
-        );
-        md5.append(Arc::from(test_digests::RANDOM_11171));
-        assert_eq!(
-            md5.result(),
-            DigestData::MD5(test_digests::md5::RANDOM_11171)
+            DigestData::MD5(fixtures::md5::RANDOM_11171)
         );
     }
 }

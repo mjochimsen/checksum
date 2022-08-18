@@ -134,7 +134,8 @@ pub fn rmd160() -> Box<dyn Generator> {
 }
 
 #[cfg(test)]
-pub mod test_digests;
+#[path = "../tests/fixtures.rs"]
+pub mod fixtures;
 
 #[cfg(test)]
 mod tests {
@@ -143,11 +144,11 @@ mod tests {
     #[test]
     fn digest_data_eq() {
         const DIGESTS: [DigestData; 5] = [
-            test_digests::crc32::EMPTY,
-            DigestData::MD5(test_digests::md5::EMPTY),
-            test_digests::sha256::EMPTY,
-            test_digests::sha512::EMPTY,
-            test_digests::rmd160::EMPTY,
+            DigestData::CRC32(fixtures::crc32::EMPTY),
+            DigestData::MD5(fixtures::md5::EMPTY),
+            DigestData::SHA256(fixtures::sha256::EMPTY),
+            DigestData::SHA512(fixtures::sha512::EMPTY),
+            DigestData::RMD160(fixtures::rmd160::EMPTY),
         ];
         for (i, left) in DIGESTS.iter().enumerate() {
             for (j, right) in DIGESTS.iter().enumerate() {
@@ -160,37 +161,39 @@ mod tests {
         }
 
         assert_ne!(
-            test_digests::crc32::EMPTY,
-            test_digests::crc32::ZERO_400D
+            DigestData::CRC32(fixtures::crc32::EMPTY),
+            DigestData::CRC32(fixtures::crc32::ZERO_400D)
         );
         assert_ne!(
-            DigestData::MD5(test_digests::md5::EMPTY),
-            DigestData::MD5(test_digests::md5::ZERO_400D)
+            DigestData::MD5(fixtures::md5::EMPTY),
+            DigestData::MD5(fixtures::md5::ZERO_400D)
         );
         assert_ne!(
-            test_digests::sha256::EMPTY,
-            test_digests::sha256::ZERO_400D
+            DigestData::SHA256(fixtures::sha256::EMPTY),
+            DigestData::SHA256(fixtures::sha256::ZERO_400D)
         );
         assert_ne!(
-            test_digests::sha512::EMPTY,
-            test_digests::sha512::ZERO_400D
+            DigestData::SHA512(fixtures::sha512::EMPTY),
+            DigestData::SHA512(fixtures::sha512::ZERO_400D)
         );
         assert_ne!(
-            test_digests::rmd160::EMPTY,
-            test_digests::rmd160::ZERO_400D
+            DigestData::RMD160(fixtures::rmd160::EMPTY),
+            DigestData::RMD160(fixtures::rmd160::ZERO_400D)
         );
     }
 
     #[test]
     fn crc32_format() {
-        assert_eq!(format!("{}", test_digests::crc32::EMPTY), "00000000");
-        assert_eq!(format!("{}", test_digests::crc32::ZERO_400D), "26a348bb");
+        assert_eq!(
+            format!("{}", DigestData::CRC32(fixtures::crc32::ZERO_400D)),
+            "26a348bb"
+        );
     }
 
     #[test]
     fn md5_format() {
         assert_eq!(
-            format!("{}", DigestData::MD5(test_digests::md5::EMPTY)),
+            format!("{}", DigestData::MD5(fixtures::md5::EMPTY)),
             "d41d8cd98f00b204e9800998ecf8427e"
         );
     }
@@ -198,7 +201,7 @@ mod tests {
     #[test]
     fn sha256_format() {
         assert_eq!(
-            format!("{}", test_digests::sha256::EMPTY),
+            format!("{}", DigestData::SHA256(fixtures::sha256::EMPTY)),
             concat!(
                 "e3b0c44298fc1c149afbf4c8996fb924",
                 "27ae41e4649b934ca495991b7852b855"
@@ -209,7 +212,7 @@ mod tests {
     #[test]
     fn sha512_format() {
         assert_eq!(
-            format!("{}", test_digests::sha512::EMPTY),
+            format!("{}", DigestData::SHA512(fixtures::sha512::EMPTY)),
             concat!(
                 "cf83e1357eefb8bdf1542850d66d8007",
                 "d620e4050b5715dc83f4a921d36ce9ce",
@@ -222,7 +225,7 @@ mod tests {
     #[test]
     fn rmd160_format() {
         assert_eq!(
-            format!("{}", test_digests::rmd160::EMPTY),
+            format!("{}", DigestData::RMD160(fixtures::rmd160::EMPTY)),
             "9c1185a5c5e9fc54612808977ee8f548b2258d31"
         );
     }
@@ -231,34 +234,34 @@ mod tests {
     fn crc32_generator() {
         let crc32 = crc32();
         let digest = crc32.result();
-        assert_eq!(digest, test_digests::crc32::EMPTY);
+        assert_eq!(digest, DigestData::CRC32(fixtures::crc32::EMPTY));
     }
 
     #[test]
     fn md5_generator() {
         let md5 = md5();
         let digest = md5.result();
-        assert_eq!(digest, DigestData::MD5(test_digests::md5::EMPTY));
+        assert_eq!(digest, DigestData::MD5(fixtures::md5::EMPTY));
     }
 
     #[test]
     fn sha256_generator() {
         let sha256 = sha256();
         let digest = sha256.result();
-        assert_eq!(digest, test_digests::sha256::EMPTY);
+        assert_eq!(digest, DigestData::SHA256(fixtures::sha256::EMPTY));
     }
 
     #[test]
     fn sha512_generator() {
         let sha512 = sha512();
         let digest = sha512.result();
-        assert_eq!(digest, test_digests::sha512::EMPTY);
+        assert_eq!(digest, DigestData::SHA512(fixtures::sha512::EMPTY));
     }
 
     #[test]
     fn rmd160_generator() {
         let rmd160 = rmd160();
         let digest = rmd160.result();
-        assert_eq!(digest, test_digests::rmd160::EMPTY);
+        assert_eq!(digest, DigestData::RMD160(fixtures::rmd160::EMPTY));
     }
 }

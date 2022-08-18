@@ -128,7 +128,7 @@ impl Drop for Context {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::test_digests;
+    use crate::fixtures;
 
     #[test]
     fn rmd160_empty() {
@@ -136,7 +136,7 @@ mod tests {
 
         let digest = rmd160.result();
 
-        assert_eq!(digest, test_digests::rmd160::EMPTY);
+        assert_eq!(digest, DigestData::RMD160(fixtures::rmd160::EMPTY));
     }
 
     #[test]
@@ -150,7 +150,7 @@ mod tests {
 
         let digest = rmd160.result();
 
-        assert_eq!(digest, test_digests::rmd160::ZERO_400D);
+        assert_eq!(digest, DigestData::RMD160(fixtures::rmd160::ZERO_400D));
     }
 
     #[test]
@@ -159,7 +159,7 @@ mod tests {
 
         let digest = rmd160.result();
 
-        assert_eq!(digest, test_digests::rmd160::EMPTY);
+        assert_eq!(digest, DigestData::RMD160(fixtures::rmd160::EMPTY));
 
         let data = Arc::from([0; 0x4000]);
         rmd160.append(data);
@@ -168,10 +168,10 @@ mod tests {
 
         let digest = rmd160.result();
 
-        assert_eq!(digest, test_digests::rmd160::ZERO_400D);
+        assert_eq!(digest, DigestData::RMD160(fixtures::rmd160::ZERO_400D));
 
         let digest = rmd160.result();
 
-        assert_eq!(digest, test_digests::rmd160::EMPTY);
+        assert_eq!(digest, DigestData::RMD160(fixtures::rmd160::EMPTY));
     }
 }

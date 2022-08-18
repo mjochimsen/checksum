@@ -89,7 +89,7 @@ fn background_crc32(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::test_digests;
+    use crate::fixtures;
 
     #[test]
     fn zlib_crc32() {
@@ -106,7 +106,7 @@ mod tests {
 
         let digest = crc32.result();
 
-        assert_eq!(digest, test_digests::crc32::EMPTY);
+        assert_eq!(digest, DigestData::CRC32(fixtures::crc32::EMPTY));
     }
 
     #[test]
@@ -120,7 +120,7 @@ mod tests {
 
         let digest = crc32.result();
 
-        assert_eq!(digest, test_digests::crc32::ZERO_400D);
+        assert_eq!(digest, DigestData::CRC32(fixtures::crc32::ZERO_400D));
     }
 
     #[test]
@@ -129,7 +129,7 @@ mod tests {
 
         let digest = crc32.result();
 
-        assert_eq!(digest, test_digests::crc32::EMPTY);
+        assert_eq!(digest, DigestData::CRC32(fixtures::crc32::EMPTY));
 
         let data = Arc::from([0; 0x4000]);
         crc32.append(data);
@@ -138,10 +138,10 @@ mod tests {
 
         let digest = crc32.result();
 
-        assert_eq!(digest, test_digests::crc32::ZERO_400D);
+        assert_eq!(digest, DigestData::CRC32(fixtures::crc32::ZERO_400D));
 
         let digest = crc32.result();
 
-        assert_eq!(digest, test_digests::crc32::EMPTY);
+        assert_eq!(digest, DigestData::CRC32(fixtures::crc32::EMPTY));
     }
 }

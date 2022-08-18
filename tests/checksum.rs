@@ -71,12 +71,12 @@ fn checksum_files() {
     let lines =
         child_readlines(&mut child).expect("error reading checksum stdout");
     assert_eq!(lines, [
-        "RMD160 (src/test_digests/zero-400d) = 81e44bc5416e987e7cdba7c8cd2935ecf15bddcd",
-        "MD5 (src/test_digests/zero-400d) = 96f64e179f777e6eda0caa2d879356c9",
-        "CRC32 (src/test_digests/zero-400d) = 26a348bb",
-        "RMD160 (src/test_digests/random-11171) = cb4f956b435d16bf03bad5607ed2e06af9eefd7b",
-        "MD5 (src/test_digests/random-11171) = ff8ae3cf944cdddea7191c906afe0c81",
-        "CRC32 (src/test_digests/random-11171) = ff70a8ee",
+        "RMD160 (tests/fixtures/zero-400d) = 81e44bc5416e987e7cdba7c8cd2935ecf15bddcd",
+        "MD5 (tests/fixtures/zero-400d) = 96f64e179f777e6eda0caa2d879356c9",
+        "CRC32 (tests/fixtures/zero-400d) = 26a348bb",
+        "RMD160 (tests/fixtures/random-11171) = cb4f956b435d16bf03bad5607ed2e06af9eefd7b",
+        "MD5 (tests/fixtures/random-11171) = ff8ae3cf944cdddea7191c906afe0c81",
+        "CRC32 (tests/fixtures/random-11171) = ff70a8ee",
     ]);
 
     let lines =
@@ -155,12 +155,12 @@ fn checksum_missing_and_present_files() {
     let lines =
         child_readlines(&mut child).expect("error reading checksum stdout");
     assert_eq!(lines, [
-        "RMD160 (src/test_digests/empty) = 9c1185a5c5e9fc54612808977ee8f548b2258d31",
-        "MD5 (src/test_digests/empty) = d41d8cd98f00b204e9800998ecf8427e",
-        "CRC32 (src/test_digests/empty) = 00000000",
-        "RMD160 (src/test_digests/zero-400d) = 81e44bc5416e987e7cdba7c8cd2935ecf15bddcd",
-        "MD5 (src/test_digests/zero-400d) = 96f64e179f777e6eda0caa2d879356c9",
-        "CRC32 (src/test_digests/zero-400d) = 26a348bb",
+        "RMD160 (tests/fixtures/empty) = 9c1185a5c5e9fc54612808977ee8f548b2258d31",
+        "MD5 (tests/fixtures/empty) = d41d8cd98f00b204e9800998ecf8427e",
+        "CRC32 (tests/fixtures/empty) = 00000000",
+        "RMD160 (tests/fixtures/zero-400d) = 81e44bc5416e987e7cdba7c8cd2935ecf15bddcd",
+        "MD5 (tests/fixtures/zero-400d) = 96f64e179f777e6eda0caa2d879356c9",
+        "CRC32 (tests/fixtures/zero-400d) = 26a348bb",
     ]);
 
     let lines =
@@ -176,7 +176,7 @@ fn run_checksum(flags: &[&str], files: &[&str]) -> process::Child {
     let mut cmd = process::Command::new(&checksum_path);
     cmd.args(flags);
     let paths = files.iter().map(|filename| {
-        path::PathBuf::from_iter(&["src", "test_digests", filename])
+        path::PathBuf::from_iter(&["tests", "fixtures", filename])
     });
     cmd.args(paths);
     cmd.stdin(process::Stdio::piped());

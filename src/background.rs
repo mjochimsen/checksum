@@ -116,7 +116,7 @@ enum Message {
 mod test {
     use super::*;
     use crate::digest::{count, xor};
-    use crate::test_digests;
+    use crate::fixtures;
 
     #[test]
     fn background_count_empty() {
@@ -135,7 +135,7 @@ mod test {
     #[test]
     fn background_xor_random() {
         let bg = Background::new(xor::XOR::new);
-        bg.update(Arc::from(test_digests::RANDOM_11171));
+        bg.update(Arc::from(fixtures::RANDOM_11171));
         assert_eq!(bg.finish(), xor::RANDOM_11171);
     }
 
@@ -143,9 +143,9 @@ mod test {
     fn background_count_multiple() {
         let bg = Background::new(count::Count::new);
         assert_eq!(bg.finish(), count::EMPTY);
-        bg.update(Arc::from(test_digests::ZERO_400D));
+        bg.update(Arc::from(fixtures::ZERO_400D));
         assert_eq!(bg.finish(), count::ZERO_400D);
-        bg.update(Arc::from(test_digests::RANDOM_11171));
+        bg.update(Arc::from(fixtures::RANDOM_11171));
         assert_eq!(bg.finish(), count::RANDOM_11171);
     }
 }

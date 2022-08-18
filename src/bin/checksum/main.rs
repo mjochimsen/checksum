@@ -316,11 +316,8 @@ impl Argument {
 }
 
 #[cfg(test)]
-use checksum::MD5;
-
-#[cfg(test)]
-#[path = "../../test_digests/mod.rs"]
-pub mod test_digests;
+#[path = "../../../tests/fixtures.rs"]
+pub mod fixtures;
 
 #[cfg(test)]
 mod tests {
@@ -541,24 +538,33 @@ mod tests {
         let generators = super::create_generators(&digests);
         assert_eq!(generators.len(), 5);
         let digest = &generators[0];
+        assert_eq!(digest.result(), DigestData::MD5(fixtures::md5::EMPTY));
+        let digest = &generators[1];
         assert_eq!(
             digest.result(),
-            DigestData::MD5(test_digests::md5::EMPTY)
+            DigestData::SHA256(fixtures::sha256::EMPTY)
         );
-        let digest = &generators[1];
-        assert_eq!(digest.result(), test_digests::sha256::EMPTY);
         let digest = &generators[2];
-        assert_eq!(digest.result(), test_digests::sha512::EMPTY);
+        assert_eq!(
+            digest.result(),
+            DigestData::SHA512(fixtures::sha512::EMPTY)
+        );
         let digest = &generators[3];
-        assert_eq!(digest.result(), test_digests::rmd160::EMPTY);
+        assert_eq!(
+            digest.result(),
+            DigestData::RMD160(fixtures::rmd160::EMPTY)
+        );
         let digest = &generators[4];
-        assert_eq!(digest.result(), test_digests::crc32::EMPTY);
+        assert_eq!(
+            digest.result(),
+            DigestData::CRC32(fixtures::crc32::EMPTY)
+        );
     }
 
     #[test]
     fn update_digests() {
         let generators = generators();
-        let data = test_digests::ZERO_400D;
+        let data = fixtures::ZERO_400D;
 
         super::update_digests(&generators, &data);
 
@@ -570,11 +576,11 @@ mod tests {
         assert_eq!(
             digests,
             vec![
-                test_digests::crc32::ZERO_400D,
-                DigestData::MD5(test_digests::md5::ZERO_400D),
-                test_digests::sha256::ZERO_400D,
-                test_digests::sha512::ZERO_400D,
-                test_digests::rmd160::ZERO_400D
+                DigestData::CRC32(fixtures::crc32::ZERO_400D),
+                DigestData::MD5(fixtures::md5::ZERO_400D),
+                DigestData::SHA256(fixtures::sha256::ZERO_400D),
+                DigestData::SHA512(fixtures::sha512::ZERO_400D),
+                DigestData::RMD160(fixtures::rmd160::ZERO_400D)
             ]
         );
     }
@@ -582,7 +588,7 @@ mod tests {
     #[test]
     fn digest_stdin() {
         let mut child = process::Command::new("/bin/cat")
-            .arg(test_data("zero-400d"))
+            .arg(fixture_data("zero-400d"))
             .stdout(process::Stdio::piped())
             .spawn()
             .expect("failed to execute /bin/cat");
@@ -596,18 +602,18 @@ mod tests {
         assert_eq!(
             digests,
             vec![
-                test_digests::crc32::ZERO_400D,
-                DigestData::MD5(test_digests::md5::ZERO_400D),
-                test_digests::sha256::ZERO_400D,
-                test_digests::sha512::ZERO_400D,
-                test_digests::rmd160::ZERO_400D
+                DigestData::CRC32(fixtures::crc32::ZERO_400D),
+                DigestData::MD5(fixtures::md5::ZERO_400D),
+                DigestData::SHA256(fixtures::sha256::ZERO_400D),
+                DigestData::SHA512(fixtures::sha512::ZERO_400D),
+                DigestData::RMD160(fixtures::rmd160::ZERO_400D)
             ]
         );
     }
 
     #[test]
     fn digest_empty() {
-        let empty = fs::File::open(test_data("empty")).unwrap();
+        let empty = fs::File::open(fixture_data("empty")).unwrap();
         let generators = generators();
 
         let digests = digest_file(empty, &generators).unwrap();
@@ -615,18 +621,18 @@ mod tests {
         assert_eq!(
             digests,
             vec![
-                test_digests::crc32::EMPTY,
-                DigestData::MD5(test_digests::md5::EMPTY),
-                test_digests::sha256::EMPTY,
-                test_digests::sha512::EMPTY,
-                test_digests::rmd160::EMPTY
+                DigestData::CRC32(fixtures::crc32::EMPTY),
+                DigestData::MD5(fixtures::md5::EMPTY),
+                DigestData::SHA256(fixtures::sha256::EMPTY),
+                DigestData::SHA512(fixtures::sha512::EMPTY),
+                DigestData::RMD160(fixtures::rmd160::EMPTY)
             ]
         );
     }
 
     #[test]
     fn digest_zero() {
-        let zero = fs::File::open(test_data("zero-400d")).unwrap();
+        let zero = fs::File::open(fixture_data("zero-400d")).unwrap();
         let generators = generators();
 
         let digests = digest_file(zero, &generators).unwrap();
@@ -634,18 +640,18 @@ mod tests {
         assert_eq!(
             digests,
             vec![
-                test_digests::crc32::ZERO_400D,
-                DigestData::MD5(test_digests::md5::ZERO_400D),
-                test_digests::sha256::ZERO_400D,
-                test_digests::sha512::ZERO_400D,
-                test_digests::rmd160::ZERO_400D
+                DigestData::CRC32(fixtures::crc32::ZERO_400D),
+                DigestData::MD5(fixtures::md5::ZERO_400D),
+                DigestData::SHA256(fixtures::sha256::ZERO_400D),
+                DigestData::SHA512(fixtures::sha512::ZERO_400D),
+                DigestData::RMD160(fixtures::rmd160::ZERO_400D)
             ]
         );
     }
 
     #[test]
     fn digest_random() {
-        let random = fs::File::open(test_data("random-11171")).unwrap();
+        let random = fs::File::open(fixture_data("random-11171")).unwrap();
         let generators = generators();
 
         let digests = digest_file(random, &generators).unwrap();
@@ -653,11 +659,11 @@ mod tests {
         assert_eq!(
             digests,
             vec![
-                test_digests::crc32::RANDOM_11171,
-                DigestData::MD5(test_digests::md5::RANDOM_11171),
-                test_digests::sha256::RANDOM_11171,
-                test_digests::sha512::RANDOM_11171,
-                test_digests::rmd160::RANDOM_11171
+                DigestData::CRC32(fixtures::crc32::RANDOM_11171),
+                DigestData::MD5(fixtures::md5::RANDOM_11171),
+                DigestData::SHA256(fixtures::sha256::RANDOM_11171),
+                DigestData::SHA512(fixtures::sha512::RANDOM_11171),
+                DigestData::RMD160(fixtures::rmd160::RANDOM_11171)
             ]
         );
     }
@@ -666,7 +672,7 @@ mod tests {
         vec![crc32(), md5(), sha256(), sha512(), rmd160()]
     }
 
-    fn test_data(filename: &str) -> PathBuf {
-        PathBuf::from_iter(&["src", "test_digests", filename])
+    fn fixture_data(filename: &str) -> PathBuf {
+        PathBuf::from_iter(&["tests", "fixtures", filename])
     }
 }

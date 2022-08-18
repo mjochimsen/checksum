@@ -109,7 +109,7 @@ pub mod xor {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::test_digests;
+    use crate::fixtures;
 
     #[test]
     fn count_empty() {
@@ -128,7 +128,7 @@ mod tests {
     #[test]
     fn count_random() {
         let mut count = count::Count::new();
-        count.update(&test_digests::RANDOM_11171);
+        count.update(&fixtures::RANDOM_11171);
         assert_eq!(count.finish(), count::RANDOM_11171);
     }
 
@@ -136,9 +136,9 @@ mod tests {
     fn count_multiple() {
         let mut count = count::Count::new();
         assert_eq!(count.finish(), count::EMPTY);
-        count.update(&test_digests::ZERO_400D);
+        count.update(&fixtures::ZERO_400D);
         assert_eq!(count.finish(), count::ZERO_400D);
-        count.update(&test_digests::RANDOM_11171);
+        count.update(&fixtures::RANDOM_11171);
         assert_eq!(count.finish(), count::RANDOM_11171);
     }
 
@@ -159,7 +159,7 @@ mod tests {
     #[test]
     fn xor_random() {
         let mut xor = xor::XOR::new();
-        xor.update(&test_digests::RANDOM_11171);
+        xor.update(&fixtures::RANDOM_11171);
         assert_eq!(xor.finish(), xor::RANDOM_11171);
     }
 
@@ -167,9 +167,9 @@ mod tests {
     fn xor_multiple() {
         let mut xor = xor::XOR::new();
         assert_eq!(xor.finish(), xor::EMPTY);
-        xor.update(&test_digests::ZERO_400D);
+        xor.update(&fixtures::ZERO_400D);
         assert_eq!(xor.finish(), xor::ZERO_400D);
-        xor.update(&test_digests::RANDOM_11171);
+        xor.update(&fixtures::RANDOM_11171);
         assert_eq!(xor.finish(), xor::RANDOM_11171);
     }
 }
