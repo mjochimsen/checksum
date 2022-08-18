@@ -20,6 +20,13 @@ impl MD5 {
     pub const LENGTH: usize = 16;
 
     /// Create a new MD5 structure to generate a digest.
+    ///
+    /// ## Panics
+    ///
+    /// If we are unable to initialize the OpenSSL structures we use to
+    /// compute the digest, a panic will occur. This should not occur
+    /// unless the OpenSSL API has fallen out of sync.
+    #[must_use]
     pub fn new() -> Self {
         let ctx = unsafe { EVP_MD_CTX_new() };
         assert!(!ctx.is_null());
@@ -52,6 +59,13 @@ impl Digest<{ Self::LENGTH }> for MD5 {
         assert!(Self::LENGTH == len as usize);
         self.reset();
         buffer[..Self::LENGTH].try_into().unwrap()
+    }
+}
+
+impl Default for MD5 {
+    /// Create a default MD5 structure to generate a digest.
+    fn default() -> Self {
+        Self::new()
     }
 }
 
