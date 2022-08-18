@@ -37,6 +37,7 @@ impl MD5 {
         this
     }
 
+    /// Initialize the OpenSSL context for use computing an MD5 digest.
     fn reset(&self) {
         unsafe { EVP_DigestInit(self.ctx, self.md5) };
     }
@@ -76,11 +77,13 @@ impl Drop for MD5 {
     }
 }
 
+/// Structure used to compute an MD5 digest in a separate thread.
 pub struct BackgroundMD5 {
     worker: Background<{ MD5::LENGTH }>,
 }
 
 impl BackgroundMD5 {
+    /// Create a new `BackgroundMD5` structure.
     pub fn new() -> Self {
         Self {
             worker: Background::new(MD5::new),
@@ -89,10 +92,12 @@ impl BackgroundMD5 {
 }
 
 impl Generator for BackgroundMD5 {
+    /// Add the given `data` to the MD5 digest.
     fn append(&self, data: Arc<[u8]>) {
         self.worker.update(data);
     }
 
+    /// Retrieve the MD5 digest data, and reset the digest computation.
     fn result(&self) -> DigestData {
         DigestData::MD5(self.worker.finish())
     }
