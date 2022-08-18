@@ -14,16 +14,12 @@ pub mod crc32 {
 }
 
 pub mod md5 {
-    use crate::{DigestData, MD5};
+    use crate::MD5;
 
     pub const EMPTY: [u8; MD5::LENGTH] = *include_bytes!("empty.md5");
     pub const ZERO_400D: [u8; MD5::LENGTH] = *include_bytes!("zero-400d.md5");
     pub const RANDOM_11171: [u8; MD5::LENGTH] =
         *include_bytes!("random-11171.md5");
-
-    pub const EMPTY_DIGEST: DigestData = DigestData::MD5(EMPTY);
-    pub const ZERO_400D_DIGEST: DigestData = DigestData::MD5(ZERO_400D);
-    pub const RANDOM_11171_DIGEST: DigestData = DigestData::MD5(RANDOM_11171);
 }
 
 pub mod sha256 {

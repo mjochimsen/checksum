@@ -541,7 +541,10 @@ mod tests {
         let generators = super::create_generators(&digests);
         assert_eq!(generators.len(), 5);
         let digest = &generators[0];
-        assert_eq!(digest.result(), test_digests::md5::EMPTY_DIGEST);
+        assert_eq!(
+            digest.result(),
+            DigestData::MD5(test_digests::md5::EMPTY)
+        );
         let digest = &generators[1];
         assert_eq!(digest.result(), test_digests::sha256::EMPTY);
         let digest = &generators[2];
@@ -568,7 +571,7 @@ mod tests {
             digests,
             vec![
                 test_digests::crc32::ZERO_400D,
-                test_digests::md5::ZERO_400D_DIGEST,
+                DigestData::MD5(test_digests::md5::ZERO_400D),
                 test_digests::sha256::ZERO_400D,
                 test_digests::sha512::ZERO_400D,
                 test_digests::rmd160::ZERO_400D
@@ -594,7 +597,7 @@ mod tests {
             digests,
             vec![
                 test_digests::crc32::ZERO_400D,
-                test_digests::md5::ZERO_400D_DIGEST,
+                DigestData::MD5(test_digests::md5::ZERO_400D),
                 test_digests::sha256::ZERO_400D,
                 test_digests::sha512::ZERO_400D,
                 test_digests::rmd160::ZERO_400D
@@ -613,7 +616,7 @@ mod tests {
             digests,
             vec![
                 test_digests::crc32::EMPTY,
-                test_digests::md5::EMPTY_DIGEST,
+                DigestData::MD5(test_digests::md5::EMPTY),
                 test_digests::sha256::EMPTY,
                 test_digests::sha512::EMPTY,
                 test_digests::rmd160::EMPTY
@@ -632,7 +635,7 @@ mod tests {
             digests,
             vec![
                 test_digests::crc32::ZERO_400D,
-                test_digests::md5::ZERO_400D_DIGEST,
+                DigestData::MD5(test_digests::md5::ZERO_400D),
                 test_digests::sha256::ZERO_400D,
                 test_digests::sha512::ZERO_400D,
                 test_digests::rmd160::ZERO_400D
@@ -651,7 +654,7 @@ mod tests {
             digests,
             vec![
                 test_digests::crc32::RANDOM_11171,
-                test_digests::md5::RANDOM_11171_DIGEST,
+                DigestData::MD5(test_digests::md5::RANDOM_11171),
                 test_digests::sha256::RANDOM_11171,
                 test_digests::sha512::RANDOM_11171,
                 test_digests::rmd160::RANDOM_11171

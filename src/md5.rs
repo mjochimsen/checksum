@@ -142,10 +142,16 @@ mod tests {
     #[test]
     fn background_md5() {
         let md5 = BackgroundMD5::new();
-        assert_eq!(md5.result(), test_digests::md5::EMPTY_DIGEST);
+        assert_eq!(md5.result(), DigestData::MD5(test_digests::md5::EMPTY));
         md5.append(Arc::from(test_digests::ZERO_400D));
-        assert_eq!(md5.result(), test_digests::md5::ZERO_400D_DIGEST);
+        assert_eq!(
+            md5.result(),
+            DigestData::MD5(test_digests::md5::ZERO_400D)
+        );
         md5.append(Arc::from(test_digests::RANDOM_11171));
-        assert_eq!(md5.result(), test_digests::md5::RANDOM_11171_DIGEST);
+        assert_eq!(
+            md5.result(),
+            DigestData::MD5(test_digests::md5::RANDOM_11171)
+        );
     }
 }
