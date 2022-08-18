@@ -15,6 +15,8 @@ mod rmd160;
 mod sha256;
 mod sha512;
 
+pub use md5::MD5;
+
 #[derive(Clone, Copy, Eq)]
 pub enum DigestData {
     CRC32([u8; 4]),
@@ -142,7 +144,9 @@ mod tests {
     fn crc32_eq() {
         assert!(test_digests::crc32::EMPTY == test_digests::crc32::EMPTY);
         assert!(test_digests::crc32::EMPTY != test_digests::crc32::ZERO_400D);
-        assert!(test_digests::crc32::EMPTY != test_digests::md5::EMPTY);
+        assert!(
+            test_digests::crc32::EMPTY != test_digests::md5::EMPTY_DIGEST
+        );
         assert!(test_digests::crc32::EMPTY != test_digests::sha256::EMPTY);
         assert!(test_digests::crc32::EMPTY != test_digests::sha512::EMPTY);
         assert!(test_digests::crc32::EMPTY != test_digests::rmd160::EMPTY);
@@ -152,14 +156,31 @@ mod tests {
 
     #[test]
     fn md5_eq() {
-        assert!(test_digests::md5::EMPTY == test_digests::md5::EMPTY);
-        assert!(test_digests::md5::EMPTY != test_digests::md5::ZERO_400D);
-        assert!(test_digests::md5::EMPTY != test_digests::crc32::EMPTY);
-        assert!(test_digests::md5::EMPTY != test_digests::sha256::EMPTY);
-        assert!(test_digests::md5::EMPTY != test_digests::sha512::EMPTY);
-        assert!(test_digests::md5::EMPTY != test_digests::rmd160::EMPTY);
+        assert!(
+            test_digests::md5::EMPTY_DIGEST
+                == test_digests::md5::EMPTY_DIGEST
+        );
+        assert!(
+            test_digests::md5::EMPTY_DIGEST
+                != test_digests::md5::ZERO_400D_DIGEST
+        );
+        assert!(
+            test_digests::md5::EMPTY_DIGEST != test_digests::crc32::EMPTY
+        );
+        assert!(
+            test_digests::md5::EMPTY_DIGEST != test_digests::sha256::EMPTY
+        );
+        assert!(
+            test_digests::md5::EMPTY_DIGEST != test_digests::sha512::EMPTY
+        );
+        assert!(
+            test_digests::md5::EMPTY_DIGEST != test_digests::rmd160::EMPTY
+        );
 
-        assert_eq!(test_digests::md5::EMPTY, test_digests::md5::EMPTY);
+        assert_eq!(
+            test_digests::md5::EMPTY_DIGEST,
+            test_digests::md5::EMPTY_DIGEST
+        );
     }
 
     #[test]
@@ -169,7 +190,9 @@ mod tests {
             test_digests::sha256::EMPTY != test_digests::sha256::ZERO_400D
         );
         assert!(test_digests::sha256::EMPTY != test_digests::crc32::EMPTY);
-        assert!(test_digests::sha256::EMPTY != test_digests::md5::EMPTY);
+        assert!(
+            test_digests::sha256::EMPTY != test_digests::md5::EMPTY_DIGEST
+        );
         assert!(test_digests::sha256::EMPTY != test_digests::sha512::EMPTY);
         assert!(test_digests::sha256::EMPTY != test_digests::rmd160::EMPTY);
 
@@ -183,7 +206,9 @@ mod tests {
             test_digests::sha512::EMPTY != test_digests::sha512::ZERO_400D
         );
         assert!(test_digests::sha512::EMPTY != test_digests::crc32::EMPTY);
-        assert!(test_digests::sha512::EMPTY != test_digests::md5::EMPTY);
+        assert!(
+            test_digests::sha512::EMPTY != test_digests::md5::EMPTY_DIGEST
+        );
         assert!(test_digests::sha512::EMPTY != test_digests::sha256::EMPTY);
         assert!(test_digests::sha512::EMPTY != test_digests::rmd160::EMPTY);
 
@@ -197,7 +222,9 @@ mod tests {
             test_digests::rmd160::EMPTY != test_digests::rmd160::ZERO_400D
         );
         assert!(test_digests::rmd160::EMPTY != test_digests::crc32::EMPTY);
-        assert!(test_digests::rmd160::EMPTY != test_digests::md5::EMPTY);
+        assert!(
+            test_digests::rmd160::EMPTY != test_digests::md5::EMPTY_DIGEST
+        );
         assert!(test_digests::rmd160::EMPTY != test_digests::sha256::EMPTY);
         assert!(test_digests::rmd160::EMPTY != test_digests::sha512::EMPTY);
 
@@ -213,7 +240,7 @@ mod tests {
     #[test]
     fn md5_format() {
         assert_eq!(
-            format!("{}", test_digests::md5::EMPTY),
+            format!("{}", test_digests::md5::EMPTY_DIGEST),
             "d41d8cd98f00b204e9800998ecf8427e"
         );
     }
@@ -261,7 +288,7 @@ mod tests {
     fn md5_generator() {
         let md5 = md5();
         let digest = md5.result();
-        assert_eq!(digest, test_digests::md5::EMPTY);
+        assert_eq!(digest, test_digests::md5::EMPTY_DIGEST);
     }
 
     #[test]

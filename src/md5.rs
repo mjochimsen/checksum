@@ -17,7 +17,7 @@ pub struct MD5 {
 
 impl MD5 {
     /// The length of the MD5 digest, in bytes.
-    const LENGTH: usize = 16;
+    pub const LENGTH: usize = 16;
 
     /// Create a new MD5 structure to generate a digest.
     pub fn new() -> Self {
@@ -92,88 +92,41 @@ mod tests {
     #[test]
     fn md5_empty() {
         let mut md5 = MD5::new();
-
-        let digest = md5.finish();
-
-        assert_eq!(DigestData::MD5(digest), test_digests::md5::EMPTY);
+        assert_eq!(md5.finish(), test_digests::md5::EMPTY);
     }
 
     #[test]
-    fn md5_data() {
+    fn md5_zero() {
         let mut md5 = MD5::new();
-
         md5.update(&[0; 0x4000]);
         md5.update(&[0; 0x0d]);
+        assert_eq!(md5.finish(), test_digests::md5::ZERO_400D);
+    }
 
-        let digest = md5.finish();
-
-        assert_eq!(DigestData::MD5(digest), test_digests::md5::ZERO_400D);
+    #[test]
+    fn md5_random() {
+        let mut md5 = MD5::new();
+        md5.update(&test_digests::RANDOM_11171);
+        assert_eq!(md5.finish(), test_digests::md5::RANDOM_11171);
     }
 
     #[test]
     fn md5_multiple() {
         let mut md5 = MD5::new();
-
-        let digest = md5.finish();
-
-        assert_eq!(DigestData::MD5(digest), test_digests::md5::EMPTY);
-
-        let data = [0; 0x4000];
-        md5.update(&data);
-        let data = [0; 0x0d];
-        md5.update(&data);
-
-        let digest = md5.finish();
-
-        assert_eq!(DigestData::MD5(digest), test_digests::md5::ZERO_400D);
-
-        let digest = md5.finish();
-
-        assert_eq!(DigestData::MD5(digest), test_digests::md5::EMPTY);
+        assert_eq!(md5.finish(), test_digests::md5::EMPTY);
+        md5.update(&test_digests::ZERO_400D);
+        assert_eq!(md5.finish(), test_digests::md5::ZERO_400D);
+        md5.update(&test_digests::RANDOM_11171);
+        assert_eq!(md5.finish(), test_digests::md5::RANDOM_11171);
     }
 
     #[test]
-    fn background_md5_empty() {
+    fn background_md5() {
         let md5 = BackgroundMD5::new();
-
-        let digest = md5.result();
-
-        assert_eq!(digest, test_digests::md5::EMPTY);
-    }
-
-    #[test]
-    fn background_md5_data() {
-        let md5 = BackgroundMD5::new();
-
-        let data = Arc::from([0; 0x4000]);
-        md5.append(data);
-        let data = Arc::from([0; 0x0d]);
-        md5.append(data);
-
-        let digest = md5.result();
-
-        assert_eq!(digest, test_digests::md5::ZERO_400D);
-    }
-
-    #[test]
-    fn background_md5_multiple() {
-        let md5 = BackgroundMD5::new();
-
-        let digest = md5.result();
-
-        assert_eq!(digest, test_digests::md5::EMPTY);
-
-        let data = Arc::from([0; 0x4000]);
-        md5.append(data);
-        let data = Arc::from([0; 0x0d]);
-        md5.append(data);
-
-        let digest = md5.result();
-
-        assert_eq!(digest, test_digests::md5::ZERO_400D);
-
-        let digest = md5.result();
-
-        assert_eq!(digest, test_digests::md5::EMPTY);
+        assert_eq!(md5.result(), test_digests::md5::EMPTY_DIGEST);
+        md5.append(Arc::from(test_digests::ZERO_400D));
+        assert_eq!(md5.result(), test_digests::md5::ZERO_400D_DIGEST);
+        md5.append(Arc::from(test_digests::RANDOM_11171));
+        assert_eq!(md5.result(), test_digests::md5::RANDOM_11171_DIGEST);
     }
 }
