@@ -32,13 +32,13 @@ impl MD5 {
         assert!(!ctx.is_null());
         let md5 = unsafe { EVP_md5() };
         assert!(!md5.is_null());
-        let this = Self { ctx, md5 };
+        let mut this = Self { ctx, md5 };
         this.reset();
         this
     }
 
     /// Initialize the OpenSSL context for use computing an MD5 digest.
-    fn reset(&self) {
+    fn reset(&mut self) {
         unsafe { EVP_DigestInit(self.ctx, self.md5) };
     }
 }
