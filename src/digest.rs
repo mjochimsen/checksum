@@ -50,14 +50,42 @@ pub mod count {
         }
     }
 
-    /// `Count` digest value for `EMPTY`.
-    pub const EMPTY: [u8; 1] = [0x00];
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+        use crate::fixtures;
 
-    /// `Count` digest value for `ZERO_400D`.
-    pub const ZERO_400D: [u8; 1] = [0x0d];
+        #[test]
+        fn empty() {
+            let mut count = Count::new();
+            assert_eq!(count.finish(), fixtures::count::EMPTY);
+        }
 
-    /// `Count` digest value for `RANDOM_11171`.
-    pub const RANDOM_11171: [u8; 1] = [0x71];
+        #[test]
+        fn zero() {
+            let mut count = Count::new();
+            count.update(&[0; 0x4000]);
+            count.update(&[0; 0x0d]);
+            assert_eq!(count.finish(), fixtures::count::ZERO_400D);
+        }
+
+        #[test]
+        fn random() {
+            let mut count = Count::new();
+            count.update(&fixtures::RANDOM_11171);
+            assert_eq!(count.finish(), fixtures::count::RANDOM_11171);
+        }
+
+        #[test]
+        fn multiple() {
+            let mut count = Count::new();
+            assert_eq!(count.finish(), fixtures::count::EMPTY);
+            count.update(&fixtures::ZERO_400D);
+            assert_eq!(count.finish(), fixtures::count::ZERO_400D);
+            count.update(&fixtures::RANDOM_11171);
+            assert_eq!(count.finish(), fixtures::count::RANDOM_11171);
+        }
+    }
 }
 
 #[cfg(test)]
@@ -96,80 +124,40 @@ pub mod xor {
         }
     }
 
-    /// `XOR` digest value for `EMPTY`.
-    pub const EMPTY: [u8; 1] = [0x00];
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+        use crate::fixtures;
 
-    /// `XOR` digest value for `ZERO_400D`.
-    pub const ZERO_400D: [u8; 1] = [0x00];
+        #[test]
+        fn empty() {
+            let mut xor = XOR::new();
+            assert_eq!(xor.finish(), fixtures::xor::EMPTY);
+        }
 
-    /// `XOR` digest value for `RANDOM_11171`.
-    pub const RANDOM_11171: [u8; 1] = [0xac];
-}
+        #[test]
+        fn zero() {
+            let mut xor = XOR::new();
+            xor.update(&[0; 0x4000]);
+            xor.update(&[0; 0x0d]);
+            assert_eq!(xor.finish(), fixtures::xor::ZERO_400D);
+        }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::fixtures;
+        #[test]
+        fn random() {
+            let mut xor = XOR::new();
+            xor.update(&fixtures::RANDOM_11171);
+            assert_eq!(xor.finish(), fixtures::xor::RANDOM_11171);
+        }
 
-    #[test]
-    fn count_empty() {
-        let mut count = count::Count::new();
-        assert_eq!(count.finish(), count::EMPTY);
-    }
-
-    #[test]
-    fn count_zero() {
-        let mut count = count::Count::new();
-        count.update(&[0; 0x4000]);
-        count.update(&[0; 0x0d]);
-        assert_eq!(count.finish(), count::ZERO_400D);
-    }
-
-    #[test]
-    fn count_random() {
-        let mut count = count::Count::new();
-        count.update(&fixtures::RANDOM_11171);
-        assert_eq!(count.finish(), count::RANDOM_11171);
-    }
-
-    #[test]
-    fn count_multiple() {
-        let mut count = count::Count::new();
-        assert_eq!(count.finish(), count::EMPTY);
-        count.update(&fixtures::ZERO_400D);
-        assert_eq!(count.finish(), count::ZERO_400D);
-        count.update(&fixtures::RANDOM_11171);
-        assert_eq!(count.finish(), count::RANDOM_11171);
-    }
-
-    #[test]
-    fn xor_empty() {
-        let mut xor = xor::XOR::new();
-        assert_eq!(xor.finish(), xor::EMPTY);
-    }
-
-    #[test]
-    fn xor_zero() {
-        let mut xor = xor::XOR::new();
-        xor.update(&[0; 0x4000]);
-        xor.update(&[0; 0x0d]);
-        assert_eq!(xor.finish(), xor::ZERO_400D);
-    }
-
-    #[test]
-    fn xor_random() {
-        let mut xor = xor::XOR::new();
-        xor.update(&fixtures::RANDOM_11171);
-        assert_eq!(xor.finish(), xor::RANDOM_11171);
-    }
-
-    #[test]
-    fn xor_multiple() {
-        let mut xor = xor::XOR::new();
-        assert_eq!(xor.finish(), xor::EMPTY);
-        xor.update(&fixtures::ZERO_400D);
-        assert_eq!(xor.finish(), xor::ZERO_400D);
-        xor.update(&fixtures::RANDOM_11171);
-        assert_eq!(xor.finish(), xor::RANDOM_11171);
+        #[test]
+        fn multiple() {
+            let mut xor = XOR::new();
+            assert_eq!(xor.finish(), fixtures::xor::EMPTY);
+            xor.update(&fixtures::ZERO_400D);
+            assert_eq!(xor.finish(), fixtures::xor::ZERO_400D);
+            xor.update(&fixtures::RANDOM_11171);
+            assert_eq!(xor.finish(), fixtures::xor::RANDOM_11171);
+        }
     }
 }

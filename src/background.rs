@@ -115,37 +115,37 @@ enum Message {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::digest::{count, xor};
+    use crate::digest::{count::Count, xor::XOR};
     use crate::fixtures;
 
     #[test]
     fn background_count_empty() {
-        let bg = Background::new(count::Count::new);
-        assert_eq!(bg.finish(), count::EMPTY);
+        let bg = Background::new(Count::new);
+        assert_eq!(bg.finish(), fixtures::count::EMPTY);
     }
 
     #[test]
     fn background_count_zero() {
-        let bg = Background::new(count::Count::new);
+        let bg = Background::new(Count::new);
         bg.update(Arc::from([0; 0x4000]));
         bg.update(Arc::from([0; 0x0d]));
-        assert_eq!(bg.finish(), count::ZERO_400D);
+        assert_eq!(bg.finish(), fixtures::count::ZERO_400D);
     }
 
     #[test]
     fn background_xor_random() {
-        let bg = Background::new(xor::XOR::new);
+        let bg = Background::new(XOR::new);
         bg.update(Arc::from(fixtures::RANDOM_11171));
-        assert_eq!(bg.finish(), xor::RANDOM_11171);
+        assert_eq!(bg.finish(), fixtures::xor::RANDOM_11171);
     }
 
     #[test]
     fn background_count_multiple() {
-        let bg = Background::new(count::Count::new);
-        assert_eq!(bg.finish(), count::EMPTY);
+        let bg = Background::new(Count::new);
+        assert_eq!(bg.finish(), fixtures::count::EMPTY);
         bg.update(Arc::from(fixtures::ZERO_400D));
-        assert_eq!(bg.finish(), count::ZERO_400D);
+        assert_eq!(bg.finish(), fixtures::count::ZERO_400D);
         bg.update(Arc::from(fixtures::RANDOM_11171));
-        assert_eq!(bg.finish(), count::RANDOM_11171);
+        assert_eq!(bg.finish(), fixtures::count::RANDOM_11171);
     }
 }

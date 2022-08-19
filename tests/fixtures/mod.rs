@@ -31,3 +31,15 @@ pub mod rmd160 {
     pub const ZERO_400D: [u8; 20] = *include_bytes!("zero-400d.rmd160");
     pub const RANDOM_11171: [u8; 20] = *include_bytes!("random-11171.rmd160");
 }
+
+pub mod count {
+    pub const EMPTY: [u8; 1] = [0x00];
+    pub const ZERO_400D: [u8; 1] = [0x0d];
+    pub const RANDOM_11171: [u8; 1] = [0x71];
+}
+
+pub mod xor {
+    pub const EMPTY: [u8; 1] = [0x00];
+    pub const ZERO_400D: [u8; 1] = [0x00];
+    pub const RANDOM_11171: [u8; 1] = [0xac];
+}
