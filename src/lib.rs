@@ -117,7 +117,7 @@ pub fn md5() -> Box<dyn Generator> {
 
 #[must_use]
 pub fn sha256() -> Box<dyn Generator> {
-    let sha256 = sha256::SHA256::new();
+    let sha256 = sha256::BackgroundSHA256::new();
     Box::new(sha256)
 }
 
