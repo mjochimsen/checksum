@@ -105,7 +105,7 @@ pub trait Generator {
 
 #[must_use]
 pub fn crc32() -> Box<dyn Generator> {
-    let crc32 = crc32::CRC32::new();
+    let crc32 = crc32::BackgroundCRC32::new();
     Box::new(crc32)
 }
 

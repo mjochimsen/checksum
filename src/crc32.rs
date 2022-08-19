@@ -1,88 +1,86 @@
-use std::sync::mpsc;
 use std::sync::Arc;
 
-use crate::{DigestData, Generator};
 use libz_sys::crc32;
 
+use crate::{Background, Digest, DigestData, Generator};
+
+/// A structure used to generated a CRC32 checksum.
 pub struct CRC32 {
-    tx_input: mpsc::SyncSender<Message>,
-    rx_result: mpsc::Receiver<[u8; 4]>,
+    /// The current CRC32 checksum.
+    crc: u32,
 }
 
 impl CRC32 {
-    pub fn new() -> CRC32 {
-        use std::thread;
+    /// The length of the CRC32 checksum, in bytes.
+    pub const LENGTH: usize = 4;
 
-        let (tx_input, rx_input) = mpsc::sync_channel(4);
-        let (tx_result, rx_result) = mpsc::channel();
+    /// Create a new CRC32 structure generate a checksum.
+    #[must_use]
+    pub fn new() -> Self {
+        Self { crc: 0 }
+    }
 
-        thread::spawn(move || {
-            background_crc32(&rx_input, &tx_result);
-        });
+    /// Re-initialize the CRC32 structure.
+    fn reset(&mut self) {
+        self.crc = 0;
+    }
+}
 
-        CRC32 {
-            tx_input,
-            rx_result,
+impl Digest<{ Self::LENGTH }> for CRC32 {
+    /// Update the CRC32 checksum using the given `data`.
+    ///
+    /// ## Panics
+    ///
+    /// Passing a data block with more than `u32::MAX` bytes will cause a
+    /// panic.
+    fn update(&mut self, data: &[u8]) {
+        let len = data
+            .len()
+            .try_into()
+            .expect("data block is too large for CRC32 processing");
+        let crc = unsafe { crc32(self.crc.into(), data.as_ptr(), len) };
+        self.crc = crc.try_into().expect("unexpected CRC32 value > u32::MAX");
+    }
+
+    /// Return the CRC32 checksum. The CRC32 checksum is reset so that it
+    /// can be reused.
+    fn finish(&mut self) -> [u8; Self::LENGTH] {
+        let crc = self.crc.to_be_bytes();
+        self.reset();
+        crc
+    }
+}
+
+impl Default for CRC32 {
+    /// Create a default CRC32 structure to generate a checksum.
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+/// Structure used to compute an CRC32 checksum in a separate thread.
+pub struct BackgroundCRC32 {
+    worker: Background<{ CRC32::LENGTH }>,
+}
+
+impl BackgroundCRC32 {
+    /// Create a new `BackgroundCRC32` structure.
+    pub fn new() -> Self {
+        Self {
+            worker: Background::new(CRC32::new),
         }
     }
 }
 
-impl Generator for CRC32 {
+impl Generator for BackgroundCRC32 {
+    /// Add the given `data` to the CRC32 checksum.
     fn append(&self, data: Arc<[u8]>) {
-        self.tx_input
-            .send(Message::Append(data))
-            .expect("unexpected error appending to digest");
+        self.worker.update(data);
     }
 
+    /// Retrieve the CRC32 checksum, and reset the checksum computation.
     fn result(&self) -> DigestData {
-        use std::time::Duration;
-
-        self.tx_input
-            .send(Message::Finish)
-            .expect("unexpected error finishing digest");
-
-        let timeout = Duration::new(5, 0);
-        let result = self
-            .rx_result
-            .recv_timeout(timeout)
-            .expect("unable to retrieve digest value");
-
-        DigestData::CRC32(result)
-    }
-}
-
-enum Message {
-    Append(Arc<[u8]>),
-    Finish,
-}
-
-fn background_crc32(
-    rx_input: &mpsc::Receiver<Message>,
-    tx_result: &mpsc::Sender<[u8; 4]>,
-) {
-    let mut crc: u32 = 0;
-
-    loop {
-        let msg = rx_input.recv();
-
-        match msg {
-            Ok(Message::Append(data)) => {
-                let len = data
-                    .len()
-                    .try_into()
-                    .expect("data block is too large for CRC32 processing");
-                let crc_sys =
-                    unsafe { crc32(crc.into(), data.as_ptr(), len) };
-                crc = crc_sys
-                    .try_into()
-                    .expect("unexpected CRC32 value > u32::MAX");
-            }
-            Ok(Message::Finish) => {
-                tx_result.send(crc.to_be_bytes()).unwrap();
-                crc = 0;
-            }
-            Err(_) => break,
-        }
+        DigestData::CRC32(self.worker.finish())
     }
 }
 
@@ -92,56 +90,49 @@ mod tests {
     use crate::fixtures;
 
     #[test]
-    fn zlib_crc32() {
-        let data = [0; 32];
-        let crc = unsafe {
-            crc32(0, data.as_ptr(), data.len().try_into().unwrap())
-        };
-        assert_eq!(crc, 0x190a_55ad);
-    }
-
-    #[test]
     fn crc32_empty() {
-        let crc32 = CRC32::new();
-
-        let digest = crc32.result();
-
-        assert_eq!(digest, DigestData::CRC32(fixtures::crc32::EMPTY));
+        let mut crc32 = CRC32::new();
+        assert_eq!(crc32.finish(), fixtures::crc32::EMPTY);
     }
 
     #[test]
-    fn crc32_data() {
-        let crc32 = CRC32::new();
+    fn crc32_zero() {
+        let mut crc32 = CRC32::new();
+        crc32.update(&[0; 0x4000]);
+        crc32.update(&[0; 0x0d]);
+        assert_eq!(crc32.finish(), fixtures::crc32::ZERO_400D);
+    }
 
-        let data = Arc::from([0; 0x4000]);
-        crc32.append(data);
-        let data = Arc::from([0; 0x0d]);
-        crc32.append(data);
-
-        let digest = crc32.result();
-
-        assert_eq!(digest, DigestData::CRC32(fixtures::crc32::ZERO_400D));
+    #[test]
+    fn crc32_random() {
+        let mut crc32 = CRC32::new();
+        crc32.update(&fixtures::RANDOM_11171);
+        assert_eq!(crc32.finish(), fixtures::crc32::RANDOM_11171);
     }
 
     #[test]
     fn crc32_multiple() {
-        let crc32 = CRC32::new();
+        let mut crc32 = CRC32::new();
+        assert_eq!(crc32.finish(), fixtures::crc32::EMPTY);
+        crc32.update(&fixtures::ZERO_400D);
+        assert_eq!(crc32.finish(), fixtures::crc32::ZERO_400D);
+        crc32.update(&fixtures::RANDOM_11171);
+        assert_eq!(crc32.finish(), fixtures::crc32::RANDOM_11171);
+    }
 
-        let digest = crc32.result();
-
-        assert_eq!(digest, DigestData::CRC32(fixtures::crc32::EMPTY));
-
-        let data = Arc::from([0; 0x4000]);
-        crc32.append(data);
-        let data = Arc::from([0; 0x0d]);
-        crc32.append(data);
-
-        let digest = crc32.result();
-
-        assert_eq!(digest, DigestData::CRC32(fixtures::crc32::ZERO_400D));
-
-        let digest = crc32.result();
-
-        assert_eq!(digest, DigestData::CRC32(fixtures::crc32::EMPTY));
+    #[test]
+    fn background_crc32() {
+        let crc32 = BackgroundCRC32::new();
+        assert_eq!(crc32.result(), DigestData::CRC32(fixtures::crc32::EMPTY));
+        crc32.append(Arc::from(fixtures::ZERO_400D));
+        assert_eq!(
+            crc32.result(),
+            DigestData::CRC32(fixtures::crc32::ZERO_400D)
+        );
+        crc32.append(Arc::from(fixtures::RANDOM_11171));
+        assert_eq!(
+            crc32.result(),
+            DigestData::CRC32(fixtures::crc32::RANDOM_11171)
+        );
     }
 }
