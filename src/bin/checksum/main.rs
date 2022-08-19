@@ -7,48 +7,41 @@ use std::path::{Path, PathBuf};
 
 use checksum::{crc32, md5, rmd160, sha256, sha512, DigestData, Generator};
 
+mod cli;
+use cli::CLI;
+
+const VERSION: &str = env!("CARGO_PKG_VERSION");
+
 fn main() {
-    let config = match Config::new(std::env::args()) {
-        Ok(config) => config,
+    let mut args = std::env::args_os();
+    let _program = args.next();
+    let cli = match CLI::parse(args) {
+        Ok(cli) => cli,
         Err(error) => {
             eprintln!("{}", error);
             std::process::exit(1)
         }
     };
 
-    let result = match choose_action(config) {
-        Action::ShowHelp => {
-            show_help();
-            Ok(())
-        }
-        Action::DigestStdin(digests) => digest_stdin(&digests),
-        Action::DigestFiles(digests, paths) => digest_files(&digests, paths),
-    };
-
-    if result.is_err() {
-        std::process::exit(1);
-    }
-}
-
-#[derive(Clone, PartialEq, Debug)]
-enum Action {
-    ShowHelp,
-    DigestStdin(Vec<DigestKind>),
-    DigestFiles(Vec<DigestKind>, Vec<PathBuf>),
-}
-
-fn choose_action(config: Config) -> Action {
-    if config.help {
-        Action::ShowHelp
-    } else if config.use_stdin() {
-        Action::DigestStdin(config.digests)
+    if cli.help {
+        show_usage();
+    } else if cli.version {
+        show_version();
+    } else if cli.paths.is_empty() {
+        digest_stdin(&cli.digests)
+            .unwrap_or_else(|_err| std::process::exit(1));
     } else {
-        Action::DigestFiles(config.digests, config.paths)
+        digest_files(&cli.digests, &cli.paths)
+            .unwrap_or_else(|_err| std::process::exit(1));
     }
 }
 
-fn show_help() {
-    print!("{}", Config::HELP);
+fn show_usage() {
+    print!("{}", CLI::USAGE);
+}
+
+fn show_version() {
+    print!("{}", VERSION);
 }
 
 fn digest_stdin(digests: &[DigestKind]) -> Result<(), ()> {
@@ -65,10 +58,7 @@ fn digest_stdin(digests: &[DigestKind]) -> Result<(), ()> {
     Ok(())
 }
 
-fn digest_files(
-    digests: &[DigestKind],
-    paths: Vec<PathBuf>,
-) -> Result<(), ()> {
+fn digest_files(digests: &[DigestKind], paths: &[PathBuf]) -> Result<(), ()> {
     // Create the generators based on the digests listed in the config.
     let generators = create_generators(digests);
     let mut error = false;
@@ -77,14 +67,14 @@ fn digest_files(
         let file = if let Ok(file) = fs::File::open(&path) {
             file
         } else {
-            print_error(&Error::FileOpenError(path));
+            print_error(&Error::FileOpenError(path.clone()));
             error = true;
             continue;
         };
         if let Ok(digests) = digest_file(file, &generators) {
-            print_digests(&digests, Some(&path));
+            print_digests(&digests, Some(path));
         } else {
-            print_error(&Error::FileReadError(path));
+            print_error(&Error::FileReadError(path.clone()));
             error = true;
             continue;
         }
@@ -100,7 +90,6 @@ fn digest_files(
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Error {
     InvalidOption(String),
-    DuplicateOption(String),
     FileOpenError(PathBuf),
     FileReadError(PathBuf),
     StdinReadError,
@@ -189,9 +178,6 @@ impl fmt::Display for Error {
             Error::InvalidOption(option) => {
                 write!(f, "invalid option '{}'", option)
             }
-            Error::DuplicateOption(option) => {
-                write!(f, "duplicate digest option '{}'", option)
-            }
             Error::FileOpenError(path) => {
                 let pathstr = path.to_str().unwrap();
                 write!(f, "unable to open '{}'", pathstr)
@@ -206,113 +192,12 @@ impl fmt::Display for Error {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-enum DigestKind {
+pub enum DigestKind {
     CRC32,
     MD5,
     SHA256,
     SHA512,
     RMD160,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-struct Config {
-    pub cmd: String,
-    pub help: bool,
-    pub paths: Vec<PathBuf>,
-    pub digests: Vec<DigestKind>,
-}
-
-impl Config {
-    pub const HELP: &'static str = include_str!("usage.txt");
-
-    pub fn new<T: Iterator<Item = impl ToString>>(
-        mut args: T,
-    ) -> Result<Config, Error> {
-        // Pull the fist argument. This is the command name.
-        let cmd = args.next().unwrap().to_string();
-
-        // Convert the arguments into the components which will be
-        // used in the Config structure.
-        let mut help = false;
-        let mut digests: Vec<DigestKind> = vec![];
-        let mut paths: Vec<PathBuf> = vec![];
-
-        for arg in args {
-            // Parse the argument.
-            match Argument::parse(&arg.to_string()) {
-                Argument::Help => {
-                    // Set the help flag.
-                    help = true;
-                }
-                Argument::Digest(digest) => {
-                    // Add the digest to list of digests. We don't
-                    // permit the same digest to appear more than
-                    // once. If it does, return an error.
-                    if digests.contains(&digest) {
-                        let error = Error::DuplicateOption(arg.to_string());
-                        return Err(error);
-                    }
-                    digests.push(digest);
-                }
-                Argument::Filename(filename) => {
-                    // Convert the filename to a PathBuf and add it
-                    // to the list of paths.
-                    let path = PathBuf::from(filename);
-                    paths.push(path);
-                }
-                Argument::Error(error) => {
-                    // If we encounter an error parsing the argument
-                    // return an InvalidOption error.
-                    return Err(Error::InvalidOption(error));
-                }
-            }
-        }
-
-        // If no digests were set, use a default set of MD5, SHA256,
-        // SHA512, and RMD160.
-        if digests.is_empty() && !help {
-            digests = vec![
-                DigestKind::MD5,
-                DigestKind::SHA256,
-                DigestKind::SHA512,
-                DigestKind::RMD160,
-            ];
-        }
-
-        Ok(Config {
-            cmd,
-            help,
-            paths,
-            digests,
-        })
-    }
-
-    pub fn use_stdin(&self) -> bool {
-        self.paths.is_empty()
-    }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-enum Argument {
-    Error(String),
-    Help,
-    Digest(DigestKind),
-    Filename(String),
-}
-
-impl Argument {
-    fn parse(arg: &str) -> Argument {
-        match arg {
-            "--help" | "-h" => Argument::Help,
-            "--crc32" => Argument::Digest(DigestKind::CRC32),
-            "--md5" => Argument::Digest(DigestKind::MD5),
-            "--sha256" => Argument::Digest(DigestKind::SHA256),
-            "--sha512" => Argument::Digest(DigestKind::SHA512),
-            "--rmd160" => Argument::Digest(DigestKind::RMD160),
-            arg if arg.starts_with('-') => Argument::Error(arg.to_string()),
-            filename => Argument::Filename(filename.to_string()),
-        }
-    }
 }
 
 #[cfg(test)]
@@ -325,205 +210,9 @@ mod tests {
     use std::process;
 
     #[test]
-    fn parse_argument() {
-        assert_eq!(Argument::parse("--help"), Argument::Help);
-        assert_eq!(Argument::parse("-h"), Argument::Help);
-
-        assert_eq!(
-            Argument::parse("--crc32"),
-            Argument::Digest(DigestKind::CRC32)
-        );
-        assert_eq!(
-            Argument::parse("--md5"),
-            Argument::Digest(DigestKind::MD5)
-        );
-        assert_eq!(
-            Argument::parse("--sha256"),
-            Argument::Digest(DigestKind::SHA256)
-        );
-        assert_eq!(
-            Argument::parse("--sha512"),
-            Argument::Digest(DigestKind::SHA512)
-        );
-        assert_eq!(
-            Argument::parse("--rmd160"),
-            Argument::Digest(DigestKind::RMD160)
-        );
-
-        assert_eq!(
-            Argument::parse("foo"),
-            Argument::Filename("foo".to_string())
-        );
-
-        assert_eq!(Argument::parse("-q"), Argument::Error("-q".to_string()));
-        assert_eq!(
-            Argument::parse("--foo"),
-            Argument::Error("--foo".to_string())
-        );
-    }
-
-    #[test]
-    fn parse_help_cli() {
-        let cli = vec!["checksum", "--help"];
-        let config = Config::new(cli.iter()).unwrap();
-
-        assert_eq!(config.cmd, "checksum");
-        assert!(config.help);
-        assert_eq!(config.paths.len(), 0);
-        assert_eq!(config.digests.len(), 0);
-    }
-
-    #[test]
-    fn parse_digests_cli() {
-        let cli = vec![
-            "checksum", "--crc32", "--md5", "--sha256", "--sha512",
-            "--rmd160",
-        ];
-        let config = Config::new(cli.iter()).unwrap();
-
-        assert_eq!(config.cmd, "checksum");
-        assert!(!config.help);
-        assert_eq!(config.paths.len(), 0);
-        assert_eq!(
-            config.digests,
-            vec![
-                DigestKind::CRC32,
-                DigestKind::MD5,
-                DigestKind::SHA256,
-                DigestKind::SHA512,
-                DigestKind::RMD160
-            ]
-        );
-    }
-
-    #[test]
-    fn parse_default_digests() {
-        let cli = vec!["checksum"];
-        let config = Config::new(cli.iter()).unwrap();
-
-        assert_eq!(config.cmd, "checksum");
-        assert!(!config.help);
-        assert_eq!(config.paths.len(), 0);
-        assert_eq!(
-            config.digests,
-            vec![
-                DigestKind::MD5,
-                DigestKind::SHA256,
-                DigestKind::SHA512,
-                DigestKind::RMD160
-            ]
-        );
-    }
-
-    #[test]
-    fn parse_filenames() {
-        let cli = vec!["checksum", "some", "files"];
-        let config = Config::new(cli.iter()).unwrap();
-
-        assert_eq!(config.cmd, "checksum");
-        assert!(!config.help);
-        assert_eq!(
-            config.digests,
-            vec![
-                DigestKind::MD5,
-                DigestKind::SHA256,
-                DigestKind::SHA512,
-                DigestKind::RMD160
-            ]
-        );
-        assert_eq!(
-            config.paths,
-            vec![PathBuf::from("some"), PathBuf::from("files")]
-        );
-    }
-
-    #[test]
-    fn use_stdin() {
-        let cli = vec!["checksum", "file"];
-        let config = Config::new(cli.iter()).unwrap();
-        assert!(!config.use_stdin());
-
-        let cli = vec!["checksum"];
-        let config = Config::new(cli.iter()).unwrap();
-        assert!(config.use_stdin());
-    }
-
-    #[test]
-    fn parse_invalid_option() {
-        let cli = vec!["checksum", "--foo"];
-        let error = Config::new(cli.iter()).unwrap_err();
-        assert_eq!(error, Error::InvalidOption(String::from("--foo")));
-    }
-
-    #[test]
-    fn parse_duplicate_digest() {
-        let cli = vec!["checksum", "--md5", "--md5"];
-        let error = Config::new(cli.iter()).unwrap_err();
-        assert_eq!(error, Error::DuplicateOption(String::from("--md5")));
-    }
-
-    #[test]
     fn format_error() {
         let error = Error::InvalidOption(String::from("--foo"));
         assert_eq!(format!("{}", error), "invalid option '--foo'");
-
-        let error = Error::DuplicateOption(String::from("--crc32"));
-        assert_eq!(format!("{}", error), "duplicate digest option '--crc32'");
-
-        let error = Error::DuplicateOption(String::from("--md5"));
-        assert_eq!(format!("{}", error), "duplicate digest option '--md5'");
-
-        let error = Error::DuplicateOption(String::from("--sha256"));
-        assert_eq!(
-            format!("{}", error),
-            "duplicate digest option '--sha256'"
-        );
-
-        let error = Error::DuplicateOption(String::from("--sha512"));
-        assert_eq!(
-            format!("{}", error),
-            "duplicate digest option '--sha512'"
-        );
-
-        let error = Error::DuplicateOption(String::from("--rmd160"));
-        assert_eq!(
-            format!("{}", error),
-            "duplicate digest option '--rmd160'"
-        );
-    }
-
-    #[test]
-    fn help_text() {
-        assert!(Config::HELP.contains("--help"));
-        assert!(Config::HELP.contains("--crc32"));
-        assert!(Config::HELP.contains("--md5"));
-        assert!(Config::HELP.contains("--sha256"));
-        assert!(Config::HELP.contains("--sha512"));
-        assert!(Config::HELP.contains("--rmd160"));
-    }
-
-    #[test]
-    fn choose_actions() {
-        let cli = vec!["checksum", "--help"];
-        let config = Config::new(cli.iter()).unwrap();
-        let action = choose_action(config);
-        assert_eq!(action, Action::ShowHelp);
-
-        let cli = vec!["checksum", "--md5"];
-        let config = Config::new(cli.iter()).unwrap();
-        let action = choose_action(config);
-        assert_eq!(action, Action::DigestStdin(vec![DigestKind::MD5]));
-
-        let cli = vec!["checksum", "--md5", "foo"];
-        let config = Config::new(cli.iter()).unwrap();
-        let action = choose_action(config);
-        assert_eq!(
-            action,
-            Action::DigestFiles(
-                vec![DigestKind::MD5],
-                vec![PathBuf::from("foo")]
-            )
-        );
     }
 
     #[test]

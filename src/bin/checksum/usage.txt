@@ -1,4 +1,5 @@
 usage: checksum [option]... [file]...
+       checksum [--version|-V]
        checksum [--help|-h]
 
 Compute checksums against a list of files. If no files are listed then the

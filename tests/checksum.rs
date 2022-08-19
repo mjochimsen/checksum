@@ -104,25 +104,6 @@ fn checksum_invalid_option() {
 }
 
 #[test]
-fn checksum_duplicate_digest() {
-    let mut child = run_checksum(&["--md5", "--md5"], &[]);
-
-    let status =
-        child_run(&mut child).expect("error running checksum subprocess");
-    assert_eq!(status, 1);
-
-    let lines =
-        child_readlines(&mut child).expect("error reading checksum stdout");
-    assert!(lines.is_empty());
-
-    let lines =
-        child_errlines(&mut child).expect("error reading checksum stderr");
-    assert_eq!(lines.len(), 1);
-    assert!(lines[0].contains("duplicate"));
-    assert!(lines[0].contains("--md5"));
-}
-
-#[test]
 fn checksum_missing_file() {
     let mut child = run_checksum(&[], &["missing"]);
 
