@@ -134,7 +134,7 @@ pub fn rmd160() -> Box<dyn Generator> {
 }
 
 #[cfg(test)]
-#[path = "../tests/fixtures.rs"]
+#[path = "../tests/fixtures/mod.rs"]
 pub mod fixtures;
 
 #[cfg(test)]
