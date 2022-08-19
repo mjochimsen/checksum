@@ -129,7 +129,7 @@ pub fn sha512() -> Box<dyn Generator> {
 
 #[must_use]
 pub fn rmd160() -> Box<dyn Generator> {
-    let rmd160 = rmd160::RMD160::new();
+    let rmd160 = rmd160::BackgroundRMD160::new();
     Box::new(rmd160)
 }
 
