@@ -123,7 +123,7 @@ pub fn sha256() -> Box<dyn Generator> {
 
 #[must_use]
 pub fn sha512() -> Box<dyn Generator> {
-    let sha512 = sha512::SHA512::new();
+    let sha512 = sha512::BackgroundSHA512::new();
     Box::new(sha512)
 }
 
