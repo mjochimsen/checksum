@@ -109,13 +109,13 @@ mod tests {
     use crate::fixtures;
 
     #[test]
-    fn sha256_empty() {
+    fn empty() {
         let mut sha256 = SHA256::new();
         assert_eq!(sha256.finish(), fixtures::sha256::EMPTY);
     }
 
     #[test]
-    fn sha256_zero() {
+    fn zero() {
         let mut sha256 = SHA256::new();
         sha256.update(&[0; 0x4000]);
         sha256.update(&[0; 0x0d]);
@@ -123,14 +123,14 @@ mod tests {
     }
 
     #[test]
-    fn sha256_random() {
+    fn random() {
         let mut sha256 = SHA256::new();
         sha256.update(&fixtures::RANDOM_11171);
         assert_eq!(sha256.finish(), fixtures::sha256::RANDOM_11171);
     }
 
     #[test]
-    fn sha256_multiple() {
+    fn multiple() {
         let mut sha256 = SHA256::new();
         assert_eq!(sha256.finish(), fixtures::sha256::EMPTY);
         sha256.update(&fixtures::ZERO_400D);
@@ -140,7 +140,7 @@ mod tests {
     }
 
     #[test]
-    fn background_sha256() {
+    fn background() {
         let sha256 = BackgroundSHA256::new();
         assert_eq!(
             sha256.result(),

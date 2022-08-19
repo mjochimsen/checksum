@@ -90,13 +90,13 @@ mod tests {
     use crate::fixtures;
 
     #[test]
-    fn crc32_empty() {
+    fn empty() {
         let mut crc32 = CRC32::new();
         assert_eq!(crc32.finish(), fixtures::crc32::EMPTY);
     }
 
     #[test]
-    fn crc32_zero() {
+    fn zero() {
         let mut crc32 = CRC32::new();
         crc32.update(&[0; 0x4000]);
         crc32.update(&[0; 0x0d]);
@@ -104,14 +104,14 @@ mod tests {
     }
 
     #[test]
-    fn crc32_random() {
+    fn random() {
         let mut crc32 = CRC32::new();
         crc32.update(&fixtures::RANDOM_11171);
         assert_eq!(crc32.finish(), fixtures::crc32::RANDOM_11171);
     }
 
     #[test]
-    fn crc32_multiple() {
+    fn multiple() {
         let mut crc32 = CRC32::new();
         assert_eq!(crc32.finish(), fixtures::crc32::EMPTY);
         crc32.update(&fixtures::ZERO_400D);
@@ -121,7 +121,7 @@ mod tests {
     }
 
     #[test]
-    fn background_crc32() {
+    fn background() {
         let crc32 = BackgroundCRC32::new();
         assert_eq!(crc32.result(), DigestData::CRC32(fixtures::crc32::EMPTY));
         crc32.append(Arc::from(fixtures::ZERO_400D));

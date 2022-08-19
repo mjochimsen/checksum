@@ -109,13 +109,13 @@ mod tests {
     use crate::fixtures;
 
     #[test]
-    fn sha512_empty() {
+    fn empty() {
         let mut sha512 = SHA512::new();
         assert_eq!(sha512.finish(), fixtures::sha512::EMPTY);
     }
 
     #[test]
-    fn sha512_zero() {
+    fn zero() {
         let mut sha512 = SHA512::new();
         sha512.update(&[0; 0x4000]);
         sha512.update(&[0; 0x0d]);
@@ -123,14 +123,14 @@ mod tests {
     }
 
     #[test]
-    fn sha512_random() {
+    fn random() {
         let mut sha512 = SHA512::new();
         sha512.update(&fixtures::RANDOM_11171);
         assert_eq!(sha512.finish(), fixtures::sha512::RANDOM_11171);
     }
 
     #[test]
-    fn sha512_multiple() {
+    fn multiple() {
         let mut sha512 = SHA512::new();
         assert_eq!(sha512.finish(), fixtures::sha512::EMPTY);
         sha512.update(&fixtures::ZERO_400D);
@@ -140,7 +140,7 @@ mod tests {
     }
 
     #[test]
-    fn background_sha512() {
+    fn background() {
         let sha512 = BackgroundSHA512::new();
         assert_eq!(
             sha512.result(),

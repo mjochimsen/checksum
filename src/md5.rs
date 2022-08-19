@@ -7,7 +7,7 @@ use openssl_sys::{
 
 use crate::{Background, Digest, DigestData, Generator};
 
-/// A structure used to generated a MD5 digest.
+/// A structure used to generate a MD5 digest.
 pub struct MD5 {
     /// The OpenSSL context used to generate the digest.
     ctx: *mut EVP_MD_CTX,
@@ -109,13 +109,13 @@ mod tests {
     use crate::fixtures;
 
     #[test]
-    fn md5_empty() {
+    fn empty() {
         let mut md5 = MD5::new();
         assert_eq!(md5.finish(), fixtures::md5::EMPTY);
     }
 
     #[test]
-    fn md5_zero() {
+    fn zero() {
         let mut md5 = MD5::new();
         md5.update(&[0; 0x4000]);
         md5.update(&[0; 0x0d]);
@@ -123,14 +123,14 @@ mod tests {
     }
 
     #[test]
-    fn md5_random() {
+    fn random() {
         let mut md5 = MD5::new();
         md5.update(&fixtures::RANDOM_11171);
         assert_eq!(md5.finish(), fixtures::md5::RANDOM_11171);
     }
 
     #[test]
-    fn md5_multiple() {
+    fn multiple() {
         let mut md5 = MD5::new();
         assert_eq!(md5.finish(), fixtures::md5::EMPTY);
         md5.update(&fixtures::ZERO_400D);
@@ -140,7 +140,7 @@ mod tests {
     }
 
     #[test]
-    fn background_md5() {
+    fn background() {
         let md5 = BackgroundMD5::new();
         assert_eq!(md5.result(), DigestData::MD5(fixtures::md5::EMPTY));
         md5.append(Arc::from(fixtures::ZERO_400D));
