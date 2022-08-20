@@ -4,7 +4,7 @@ use std::fmt;
 use std::sync::Arc;
 
 mod digest;
-pub use digest::Digest;
+pub use crate::digest::Digest;
 
 mod background;
 pub use background::Background;

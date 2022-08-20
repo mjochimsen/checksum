@@ -4,7 +4,7 @@ use std::fs;
 use std::io;
 use std::path::{Path, PathBuf};
 
-use checksum::{crc32, md5, rmd160, sha256, sha512, DigestData, Generator};
+use digest::{crc32, md5, rmd160, sha256, sha512, DigestData, Generator};
 
 mod error;
 use error::Error;
@@ -229,7 +229,7 @@ mod tests {
 
         super::update_digests(&generators, &data);
 
-        let digests: Vec<checksum::DigestData> = generators
+        let digests: Vec<digest::DigestData> = generators
             .iter()
             .map(|generator| generator.result())
             .collect();
