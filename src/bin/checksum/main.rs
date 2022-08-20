@@ -1,16 +1,28 @@
 #![warn(clippy::all, clippy::pedantic)]
 
-use std::fmt;
 use std::fs;
 use std::io;
 use std::path::{Path, PathBuf};
 
 use checksum::{crc32, md5, rmd160, sha256, sha512, DigestData, Generator};
 
+mod error;
+use error::Error;
+
 mod cli;
 use cli::CLI;
 
+/// The version number of the program.
 const VERSION: &str = env!("CARGO_PKG_VERSION");
+
+#[derive(Debug, PartialEq, Eq)]
+pub enum DigestKind {
+    CRC32,
+    MD5,
+    SHA256,
+    SHA512,
+    RMD160,
+}
 
 fn main() {
     let mut args = std::env::args_os();
@@ -36,12 +48,14 @@ fn main() {
     }
 }
 
+/// Show the usage text.
 fn show_usage() {
     print!("{}", CLI::USAGE);
 }
 
+/// Show the program version.
 fn show_version() {
-    print!("{}", VERSION);
+    println!("checksum {}", VERSION);
 }
 
 fn digest_stdin(digests: &[DigestKind]) -> Result<(), ()> {
@@ -52,7 +66,7 @@ fn digest_stdin(digests: &[DigestKind]) -> Result<(), ()> {
     if let Ok(digests) = digest_file(input, &generators) {
         print_digests(&digests, None);
     } else {
-        print_error(&Error::StdinReadError);
+        print_error(&Error::StdinRead);
         return Err(());
     }
     Ok(())
@@ -67,14 +81,14 @@ fn digest_files(digests: &[DigestKind], paths: &[PathBuf]) -> Result<(), ()> {
         let file = if let Ok(file) = fs::File::open(&path) {
             file
         } else {
-            print_error(&Error::FileOpenError(path.clone()));
+            print_error(&Error::FileOpen(path.clone()));
             error = true;
             continue;
         };
         if let Ok(digests) = digest_file(file, &generators) {
             print_digests(&digests, Some(path));
         } else {
-            print_error(&Error::FileReadError(path.clone()));
+            print_error(&Error::FileRead(path.clone()));
             error = true;
             continue;
         }
@@ -85,14 +99,6 @@ fn digest_files(digests: &[DigestKind], paths: &[PathBuf]) -> Result<(), ()> {
     } else {
         Ok(())
     }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum Error {
-    InvalidOption(String),
-    FileOpenError(PathBuf),
-    FileReadError(PathBuf),
-    StdinReadError,
 }
 
 fn print_error(error: &Error) {
@@ -172,34 +178,6 @@ fn update_digests(generators: &[Box<dyn Generator>], data: &[u8]) {
     }
 }
 
-impl fmt::Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            Error::InvalidOption(option) => {
-                write!(f, "invalid option '{}'", option)
-            }
-            Error::FileOpenError(path) => {
-                let pathstr = path.to_str().unwrap();
-                write!(f, "unable to open '{}'", pathstr)
-            }
-            Error::FileReadError(path) => {
-                let pathstr = path.to_str().unwrap();
-                write!(f, "unable to read from '{}'", pathstr)
-            }
-            Error::StdinReadError => write!(f, "unable to read from stdin"),
-        }
-    }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum DigestKind {
-    CRC32,
-    MD5,
-    SHA256,
-    SHA512,
-    RMD160,
-}
-
 #[cfg(test)]
 #[path = "../../../tests/fixtures/mod.rs"]
 pub mod fixtures;
@@ -208,12 +186,6 @@ pub mod fixtures;
 mod tests {
     use super::*;
     use std::process;
-
-    #[test]
-    fn format_error() {
-        let error = Error::InvalidOption(String::from("--foo"));
-        assert_eq!(format!("{}", error), "invalid option '--foo'");
-    }
 
     #[test]
     fn create_generators() {
